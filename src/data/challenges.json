@@ -1,0 +1,116 @@
+[
+  {
+    "title": "Boss Fight",
+    "description": "Testing",
+    "mode": "1v1",
+    "isActive": true,
+    "config": {
+      "teamSize": 1,
+      "tournamentType": "last_standing",
+      "arenaPool": [
+        "zephyr-peaks-plateau"
+      ],
+      "powerScale": false,
+      "teamA": {
+        "name": "Team A",
+        "type": "player",
+        "count": 2,
+        "tags": {
+          "include": [],
+          "exclude": []
+        },
+        "modifiers": true,
+        "powerRange": {
+          "min": 0,
+          "max": 9900
+        },
+        "stageMode": "random"
+      },
+      "teamB": {
+        "name": "Team B",
+        "type": "cpu",
+        "count": 1,
+        "tags": {
+          "include": [],
+          "exclude": []
+        },
+        "modifiers": true,
+        "powerRange": {
+          "min": 10000,
+          "max": 16000
+        }
+      },
+      "limit": 0
+    },
+    "id": "challenge_1770688668077",
+    "createdAt": "2026-02-10T01:57:48.078Z"
+  },
+  {
+    "title": "teting",
+    "description": "",
+    "mode": "1v1",
+    "isActive": true,
+    "config": {
+      "teamSize": 1,
+      "tournamentType": "classic",
+      "arenaPool": [],
+      "powerScale": false,
+      "teamA": {
+        "name": "Team A",
+        "type": "player",
+        "count": 3,
+        "tags": {
+          "include": [],
+          "exclude": []
+        },
+        "modifiers": true
+      },
+      "teamB": {
+        "name": "Team B",
+        "type": "cpu",
+        "count": 3,
+        "tags": {
+          "include": [],
+          "exclude": []
+        },
+        "modifiers": true
+      }
+    },
+    "id": "challenge_1770855968811",
+    "createdAt": "2026-02-12T00:26:08.811Z"
+  },
+  {
+    "title": "tetete",
+    "description": "",
+    "mode": "1v1",
+    "isActive": true,
+    "config": {
+      "teamSize": 1,
+      "tournamentType": "classic",
+      "arenaPool": [],
+      "powerScale": false,
+      "teamA": {
+        "name": "Team A",
+        "type": "player",
+        "count": 4,
+        "tags": {
+          "include": [],
+          "exclude": []
+        },
+        "modifiers": true
+      },
+      "teamB": {
+        "name": "Team B",
+        "type": "cpu",
+        "count": 4,
+        "tags": {
+          "include": [],
+          "exclude": []
+        },
+        "modifiers": true
+      }
+    },
+    "id": "challenge_1770856878909",
+    "createdAt": "2026-02-12T00:41:18.909Z"
+  }
+]

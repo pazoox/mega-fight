@@ -1,0 +1,667 @@
+{
+  "races": [
+    {
+      "value": "Saiyan",
+      "description": "Canonical Saiyan race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Titan",
+      "description": "Canonical Titan race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Demon",
+      "description": "Canonical Demon race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Angel",
+      "description": "Canonical Angel race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Cyborg",
+      "description": "Canonical Cyborg race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Alien",
+      "description": "Canonical Alien race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Mutant",
+      "description": "Canonical Mutant race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Spirit",
+      "description": "Canonical Spirit race",
+      "icon": "Dna"
+    },
+    {
+      "value": "God",
+      "description": "Canonical God race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Vampire",
+      "description": "Canonical Vampire race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Werewolf",
+      "description": "Canonical Werewolf race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Undead",
+      "description": "Canonical Undead race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Dragon",
+      "description": "Canonical Dragon race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Elf",
+      "description": "Canonical Elf race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Dwarf",
+      "description": "Canonical Dwarf race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Orc",
+      "description": "Canonical Orc race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Android",
+      "description": "Canonical Android race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Shinigami",
+      "description": "Canonical Shinigami race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Hollow",
+      "description": "Canonical Hollow race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Wizard",
+      "description": "Canonical Wizard race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Witch",
+      "description": "Canonical Witch race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Meta-Human",
+      "description": "Canonical Meta-Human race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Curse",
+      "description": "Canonical Curse race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Sorcerer",
+      "description": "Canonical Sorcerer race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Pirate",
+      "description": "Canonical Pirate race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Marine",
+      "description": "Canonical Marine race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Ninja",
+      "description": "Canonical Ninja race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Samurai",
+      "description": "Canonical Samurai race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Majin",
+      "description": "Canonical Majin race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Ghoul",
+      "description": "Canonical Ghoul race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Esper",
+      "description": "Canonical Esper race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Devil",
+      "description": "Canonical Devil race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Celestial",
+      "description": "Canonical Celestial race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Giant",
+      "description": "Canonical Giant race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Fairy",
+      "description": "Canonical Fairy race",
+      "icon": "Dna"
+    },
+    {
+      "value": "Beastman",
+      "description": "Canonical Beastman race",
+      "icon": "Dna"
+    }
+  ],
+  "combatClasses": [
+    {
+      "value": "Assault",
+      "description": "Balanced combatant",
+      "icon": "LucideSwords"
+    },
+    {
+      "value": "Tank",
+      "description": "High durability and HP",
+      "icon": "LucideShield"
+    },
+    {
+      "value": "Mage",
+      "description": "High special power and area control",
+      "icon": "LucideWand2"
+    },
+    {
+      "value": "Speedster",
+      "description": "High mobility and reaction",
+      "icon": "LucideZap"
+    },
+    {
+      "value": "Support",
+      "description": "Strategic utility",
+      "icon": "Handshake"
+    },
+    {
+      "value": "Healer",
+      "description": "Vitality recovery",
+      "icon": "Heart"
+    },
+    {
+      "value": "Assassin",
+      "description": "Precision and burst potential",
+      "icon": "Ghost"
+    },
+    {
+      "value": "Marksman",
+      "description": "Long-range specialist",
+      "icon": "Crosshair"
+    },
+    {
+      "value": "Brawler",
+      "description": "Close-quarters physical power",
+      "icon": "Hammer"
+    },
+    {
+      "value": "Summoner",
+      "description": "Entity creation/control",
+      "icon": "LucidePawPrint"
+    },
+    {
+      "value": "Specialist",
+      "description": "Unique or non-standard mechanics",
+      "icon": "LucideStar"
+    }
+  ],
+  "skillTags": [
+    {
+      "value": "Melee",
+      "description": "Close-quarters combat",
+      "icon": "LucideSwords"
+    },
+    {
+      "value": "Ranged",
+      "description": "Distance fighting",
+      "icon": "Crosshair"
+    },
+    {
+      "value": "AoE",
+      "description": "Area of Effect",
+      "icon": "Grid"
+    },
+    {
+      "value": "Single Target",
+      "description": "Focused attack on one enemy",
+      "icon": "CircleDot"
+    },
+    {
+      "value": "Buff",
+      "description": "Enhances stats or abilities",
+      "icon": "LucideSparkles"
+    },
+    {
+      "value": "Debuff",
+      "description": "Reduces stats or hinders enemies",
+      "icon": "Biohazard"
+    },
+    {
+      "value": "Control",
+      "description": "Restricts enemy movement/actions",
+      "icon": "Anchor"
+    },
+    {
+      "value": "Burst",
+      "description": "High damage in short time",
+      "icon": "Flame"
+    },
+    {
+      "value": "Sustain",
+      "description": "Recovery and endurance",
+      "icon": "Heart"
+    },
+    {
+      "value": "Finisher",
+      "description": "High power execute move",
+      "icon": "LucideSkull"
+    },
+    {
+      "value": "Physical",
+      "description": "Kinetic impact damage",
+      "icon": "Hammer"
+    },
+    {
+      "value": "Magic",
+      "description": "Spell-based damage",
+      "icon": "LucideWand2"
+    },
+    {
+      "value": "Energy",
+      "description": "Beam/Projectile energy damage",
+      "icon": "LucideZap"
+    },
+    {
+      "value": "Imunity",
+      "description": "Not affected by certain conditions",
+      "icon": "LucideShieldClose"
+    }
+  ],
+  "movements": [
+    {
+      "value": "Terrestrial",
+      "description": "Ground-based",
+      "icon": "Footprints"
+    },
+    {
+      "value": "Aquatic",
+      "description": "Water-based",
+      "icon": "LucideWaves"
+    },
+    {
+      "value": "Aerial",
+      "description": "Flight/Air",
+      "icon": "LucideWind"
+    },
+    {
+      "value": "Spatial",
+      "description": "Vacuum/Space",
+      "icon": "LucideRocket"
+    },
+    {
+      "value": "Phasing",
+      "description": "Passing through matter",
+      "icon": "Layers"
+    },
+    {
+      "value": "Warping",
+      "description": "Short-range teleportation",
+      "icon": "LucideMove"
+    },
+    {
+      "value": "Omnipresent",
+      "description": "Existing everywhere simultaneously",
+      "icon": "Globe"
+    }
+  ],
+  "compositions": [
+    {
+      "value": "Organic",
+      "description": "Biological flesh",
+      "icon": "Leaf"
+    },
+    {
+      "value": "Metallic",
+      "description": "Solid inorganic",
+      "icon": "Hexagon"
+    },
+    {
+      "value": "Spiritual",
+      "description": "Non-material",
+      "icon": "Cloud"
+    },
+    {
+      "value": "Gaseous / Liquid",
+      "description": "Fluid states",
+      "icon": "Droplets"
+    },
+    {
+      "value": "Energy",
+      "description": "Pure radiation/plasma",
+      "icon": "LucideZap"
+    },
+    {
+      "value": "Crystalline",
+      "description": "Structural minerals",
+      "icon": "Gem"
+    },
+    {
+      "value": "Eldritch",
+      "description": "Anomalous matter",
+      "icon": "Eye"
+    },
+    {
+      "value": "Undead",
+      "description": "Reanimated organic",
+      "icon": "LucideSkull"
+    }
+  ],
+  "sources": [
+    {
+      "value": "Mana",
+      "description": "Classic magic",
+      "icon": "LucideSparkles"
+    },
+    {
+      "value": "Chakra",
+      "description": "Internal pathways",
+      "icon": "CircleDot"
+    },
+    {
+      "value": "Ki",
+      "description": "Life force",
+      "icon": "Activity"
+    },
+    {
+      "value": "Divine",
+      "description": "Celestial power",
+      "icon": "LucideSun"
+    },
+    {
+      "value": "Tech",
+      "description": "Artificial/Digital",
+      "icon": "Cpu"
+    },
+    {
+      "value": "Force",
+      "description": "Fundamental physics",
+      "icon": "Atom"
+    },
+    {
+      "value": "Biological",
+      "description": "Organic evolution",
+      "icon": "Dna"
+    },
+    {
+      "value": "Psionic",
+      "description": "Mental energy",
+      "icon": "Brain"
+    },
+    {
+      "value": "Alchemical",
+      "description": "Transmutation",
+      "icon": "FlaskConical"
+    },
+    {
+      "value": "Stellar",
+      "description": "Star-based radiation",
+      "icon": "LucideStar"
+    },
+    {
+      "value": "Demonic",
+      "description": "Pact with the Devil, Possessed by a Demon or Devil itself.",
+      "icon": "LucideSkull"
+    }
+  ],
+  "elements": [
+    {
+      "value": "Fire",
+      "description": "Heat/Plasma",
+      "icon": "Flame"
+    },
+    {
+      "value": "Water",
+      "description": "Fluid/Cold",
+      "icon": "Droplets"
+    },
+    {
+      "value": "Earth",
+      "description": "Solid/Mineral",
+      "icon": "LucideMountain"
+    },
+    {
+      "value": "Air",
+      "description": "Gas/Motion",
+      "icon": "LucideWind"
+    },
+    {
+      "value": "Lightning",
+      "description": "Electric/Speed",
+      "icon": "LucideZap"
+    },
+    {
+      "value": "Ice",
+      "description": "Solidified Cold",
+      "icon": "LucideSnowflake"
+    },
+    {
+      "value": "Light",
+      "description": "Photonic/Divine",
+      "icon": "LucideSun"
+    },
+    {
+      "value": "Dark",
+      "description": "Shadow/Eldritch",
+      "icon": "LucideMoon"
+    },
+    {
+      "value": "Aether",
+      "description": "Space/Void",
+      "icon": "LucideOrbit"
+    },
+    {
+      "value": "Nature",
+      "description": "Biological/Flora",
+      "icon": "Leaf"
+    },
+    {
+      "value": "Metal",
+      "description": "Magnetism/Ferromancy",
+      "icon": "LucideWrench"
+    },
+    {
+      "value": "Radiation",
+      "description": "Nuclear/Atomic decay",
+      "icon": "LucideRadiation"
+    },
+    {
+      "value": "Gravity",
+      "description": "Weight/Spatial curvature",
+      "icon": "Anchor"
+    },
+    {
+      "value": "Toxic",
+      "description": "Poison/Corrosion",
+      "icon": "Biohazard"
+    },
+    {
+      "value": "Sound",
+      "description": "Vibration/Frequency",
+      "icon": "LucideVolume2"
+    },
+    {
+      "value": "Sand",
+      "description": "Small Minerals",
+      "icon": "LucideTriangle"
+    }
+  ],
+  "arenaDaytimes": [
+    {
+      "value": "Neutral",
+      "description": "No specific time influence",
+      "icon": "CircleDot"
+    },
+    {
+      "value": "Day",
+      "description": "Bright sunlight, standard visibility",
+      "icon": "LucideSun"
+    },
+    {
+      "value": "Night",
+      "description": "Darkness, reduced visibility, moon buffs",
+      "icon": "LucideMoon"
+    },
+    {
+      "value": "Dawn",
+      "description": "Rising sun, spiritual awakening",
+      "icon": "LucideSunrise"
+    },
+    {
+      "value": "Dusk",
+      "description": "Setting sun, fading light",
+      "icon": "LucideSunset"
+    }
+  ],
+  "environments": [
+    {
+      "value": "Neutral",
+      "description": "Standard battlefield",
+      "icon": "CircleDot"
+    },
+    {
+      "value": "Volcanic",
+      "description": "Extreme heat and lava",
+      "icon": "Flame"
+    },
+    {
+      "value": "Aquatic",
+      "description": "Submerged or water-heavy",
+      "icon": "Droplets"
+    },
+    {
+      "value": "Mountain",
+      "description": "High altitude, rocky terrain",
+      "icon": "LucideMountain"
+    },
+    {
+      "value": "City",
+      "description": "Urban environment with cover",
+      "icon": "Building2"
+    },
+    {
+      "value": "Spectral",
+      "description": "Ghostly realm, ethereal physics",
+      "icon": "Ghost"
+    },
+    {
+      "value": "Dark",
+      "description": "Abyssal darkness, fear inducement",
+      "icon": "LucideSkull"
+    },
+    {
+      "value": "Space",
+      "description": "Zero gravity, vacuum",
+      "icon": "LucideOrbit"
+    },
+    {
+      "value": "Cage",
+      "description": "Enclosed arena, no escape",
+      "icon": "Grid"
+    },
+    {
+      "value": "Forest",
+      "description": "Dense vegetation and cover",
+      "icon": "LucideTreePine"
+    },
+    {
+      "value": "Desert",
+      "description": "Sand, heat, and difficult terrain",
+      "icon": "LucideTent"
+    },
+    {
+      "value": "Ruins",
+      "description": "Ancient structures, unstable ground",
+      "icon": "Landmark"
+    },
+    {
+      "value": "Extra Dimensional",
+      "description": "Against Physical Laws / Space-Time",
+      "icon": "LucideSquareStack"
+    }
+  ],
+  "weathers": [
+    {
+      "value": "Neutral",
+      "description": "Standard atmospheric conditions",
+      "icon": "CircleDot"
+    },
+    {
+      "value": "Sunny",
+      "description": "Clear skies",
+      "icon": "LucideSun"
+    },
+    {
+      "value": "Rainy",
+      "description": "Precipitation",
+      "icon": "CloudRain"
+    },
+    {
+      "value": "Windy",
+      "description": "Strong gusts",
+      "icon": "LucideWind"
+    },
+    {
+      "value": "Snowy",
+      "description": "Freezing temperatures",
+      "icon": "LucideSnowflake"
+    },
+    {
+      "value": "Stormy",
+      "description": "Thunder and lightning",
+      "icon": "CloudLightning"
+    },
+    {
+      "value": "Foggy",
+      "description": "Reduced visibility due to fog",
+      "icon": "CloudFog"
+    },
+    {
+      "value": "Radiation Waves",
+      "description": "High level of radiation in the air",
+      "icon": "LucideRadiation"
+    }
+  ]
+}

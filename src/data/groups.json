@@ -1,0 +1,117 @@
+[
+  {
+    "name": "Attack On Titan",
+    "races": [
+      "Human",
+      "Titan"
+    ],
+    "id": "attack-on-titan"
+  },
+  {
+    "name": "Harry Potter",
+    "races": [
+      "Wizard",
+      "Human",
+      "Magical Beast"
+    ],
+    "id": "harry-potter"
+  },
+  {
+    "name": "Avatar",
+    "races": [
+      "Human",
+      "Spirit",
+      "Water Bender",
+      "Fire Bender",
+      "Earth Bender",
+      "Air Bender",
+      "Avatar"
+    ],
+    "id": "avatar"
+  },
+  {
+    "name": "Arcane",
+    "races": [
+      "Human",
+      "Meta-Human",
+      "Beast",
+      "Mage",
+      "Warrior"
+    ],
+    "id": "arcane",
+    "isActive": false
+  },
+  {
+    "name": "Black Clover",
+    "races": [
+      "Wizard",
+      "Witch",
+      "Demon",
+      "Elf",
+      "Human"
+    ],
+    "id": "black-clover"
+  },
+  {
+    "name": "Invencible",
+    "races": [
+      "Viltrumite",
+      "Human",
+      "Meta-Human",
+      "Beast",
+      "Alien"
+    ],
+    "id": "invencible"
+  },
+  {
+    "name": "Solo Leveling",
+    "races": [
+      "Mage",
+      "Beast",
+      "Necromancer",
+      "Warrior"
+    ],
+    "id": "solo-leveling"
+  },
+  {
+    "name": "Star Wars",
+    "races": [
+      "Jedi",
+      "Sith",
+      "Human",
+      "Droid"
+    ],
+    "id": "star-wars"
+  },
+  {
+    "name": "The Boys",
+    "races": [
+      "Sup",
+      "Human"
+    ],
+    "id": "the-boys"
+  },
+  {
+    "name": "Marvel",
+    "races": [
+      "Super Human",
+      "Entity",
+      "Celestial",
+      "Mage",
+      "Sourcerer",
+      "Necromancer",
+      "Beast",
+      "Mutant"
+    ],
+    "id": "marvel"
+  },
+  {
+    "name": "Naruto",
+    "races": [
+      "Jinchuuriki",
+      "Ninja",
+      "Tailed Beast"
+    ],
+    "id": "naruto"
+  }
+]

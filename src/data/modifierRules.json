@@ -1,0 +1,992 @@
+[
+  {
+    "id": "rule_weather_rain_fire",
+    "trigger": {
+      "type": "Weather",
+      "value": "Rainy"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Fire"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 0.8
+    },
+    "description": "Rain weakens flames.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_weather_rain_water",
+    "trigger": {
+      "type": "Weather",
+      "value": "Rainy"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Water"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 1.15
+    },
+    "description": "Rain strengthens hydromancy.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_weather_rain_lightning",
+    "trigger": {
+      "type": "Weather",
+      "value": "Rainy"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Lightning"
+    },
+    "effect": {
+      "stat": "SPD",
+      "type": "percentage",
+      "value": 1.2
+    },
+    "description": "Water conducts electricity, increasing attack speed.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_weather_sun_fire",
+    "trigger": {
+      "type": "Weather",
+      "value": "Sunny"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Fire"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 1.15
+    },
+    "description": "Intense sun fuels fire abilities.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_weather_sun_divine",
+    "trigger": {
+      "type": "Weather",
+      "value": "Sunny"
+    },
+    "target": {
+      "type": "Source",
+      "value": "Divine"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "flat",
+      "value": 100
+    },
+    "description": "Sunlight is often associated with divine power.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_weather_sun_ice",
+    "trigger": {
+      "type": "Weather",
+      "value": "Sunny"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Ice"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 0.85
+    },
+    "description": "Heat melts ice constructs.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_weather_sun_vampire",
+    "trigger": {
+      "type": "Weather",
+      "value": "Sunny"
+    },
+    "target": {
+      "type": "Race",
+      "value": "Vampire"
+    },
+    "effect": {
+      "stat": "Overall",
+      "type": "percentage",
+      "value": 0.7
+    },
+    "description": "Vampires are severely weakened by sunlight.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_weather_snow_ice",
+    "trigger": {
+      "type": "Weather",
+      "value": "Snowy"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Ice"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 1.2
+    },
+    "description": "Freezing environment boosts cryomancy.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_weather_snow_nature",
+    "trigger": {
+      "type": "Weather",
+      "value": "Snowy"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Nature"
+    },
+    "effect": {
+      "stat": "SPD",
+      "type": "percentage",
+      "value": 0.85
+    },
+    "description": "Extreme cold slows down biological processes.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_weather_storm_lightning",
+    "trigger": {
+      "type": "Weather",
+      "value": "Stormy"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Lightning"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "flat",
+      "value": 250
+    },
+    "description": "Storms charge the atmosphere with electricity.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_weather_wind_air",
+    "trigger": {
+      "type": "Weather",
+      "value": "Windy"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Air"
+    },
+    "effect": {
+      "stat": "SPD",
+      "type": "percentage",
+      "value": 1.2
+    },
+    "description": "Strong winds assist aerokinesis and flight.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_weather_fog_assassin",
+    "trigger": {
+      "type": "Weather",
+      "value": "Foggy"
+    },
+    "target": {
+      "type": "CombatClass",
+      "value": "Assassin"
+    },
+    "effect": {
+      "stat": "SPD",
+      "type": "flat",
+      "value": 150
+    },
+    "description": "Mist provides perfect cover for stealth.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_weather_fog_marksman",
+    "trigger": {
+      "type": "Weather",
+      "value": "Foggy"
+    },
+    "target": {
+      "type": "CombatClass",
+      "value": "Marksman"
+    },
+    "effect": {
+      "stat": "STR",
+      "type": "percentage",
+      "value": 0.8
+    },
+    "description": "Low visibility hinders long-range accuracy.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_volcano_fire",
+    "trigger": {
+      "type": "Environment",
+      "value": "Volcanic"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Fire"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 1.2
+    },
+    "description": "Extreme heat from magma boosts fire.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_volcano_ice",
+    "trigger": {
+      "type": "Environment",
+      "value": "Volcanic"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Ice"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 0.7
+    },
+    "description": "Hostile environment for ice.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_aquatic_aquatic",
+    "trigger": {
+      "type": "Environment",
+      "value": "Aquatic"
+    },
+    "target": {
+      "type": "Movement",
+      "value": "Aquatic"
+    },
+    "effect": {
+      "stat": "SPD",
+      "type": "flat",
+      "value": 300
+    },
+    "description": "Natural mobility in water.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_aquatic_fire",
+    "trigger": {
+      "type": "Environment",
+      "value": "Aquatic"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Fire"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 0.6
+    },
+    "description": "Submerged fire is nearly useless.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_aquatic_lightning",
+    "trigger": {
+      "type": "Environment",
+      "value": "Aquatic"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Lightning"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 1.2
+    },
+    "description": "Water conductivity amplifies area damage.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_city_speedster",
+    "trigger": {
+      "type": "Environment",
+      "value": "City"
+    },
+    "target": {
+      "type": "CombatClass",
+      "value": "Speedster"
+    },
+    "effect": {
+      "stat": "SPD",
+      "type": "percentage",
+      "value": 0.9
+    },
+    "description": "Urban obstacles hinder linear super speed.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_city_tech",
+    "trigger": {
+      "type": "Environment",
+      "value": "City"
+    },
+    "target": {
+      "type": "Source",
+      "value": "Tech"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "flat",
+      "value": 150
+    },
+    "description": "Access to power grids and data networks.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_forest_nature",
+    "trigger": {
+      "type": "Environment",
+      "value": "Forest"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Nature"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 1.25
+    },
+    "description": "Abundance of plant matter to manipulate.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_forest_tank",
+    "trigger": {
+      "type": "Environment",
+      "value": "Forest"
+    },
+    "target": {
+      "type": "CombatClass",
+      "value": "Tank"
+    },
+    "effect": {
+      "stat": "SPD",
+      "type": "percentage",
+      "value": 0.9
+    },
+    "description": "Dense terrain obstructs large bodies.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_space_aerial",
+    "trigger": {
+      "type": "Environment",
+      "value": "Space"
+    },
+    "target": {
+      "type": "Movement",
+      "value": "Aerial"
+    },
+    "effect": {
+      "stat": "SPD",
+      "type": "percentage",
+      "value": 0.5
+    },
+    "description": "Wings do not function in a vacuum.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_space_spatial",
+    "trigger": {
+      "type": "Environment",
+      "value": "Space"
+    },
+    "target": {
+      "type": "Movement",
+      "value": "Spatial"
+    },
+    "effect": {
+      "stat": "SPD",
+      "type": "percentage",
+      "value": 1.2
+    },
+    "description": "Perfect adaptation to the void.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_space_air",
+    "trigger": {
+      "type": "Environment",
+      "value": "Space"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Air"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 0.2
+    },
+    "description": "No atmosphere to manipulate.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_space_stellar",
+    "trigger": {
+      "type": "Environment",
+      "value": "Space"
+    },
+    "target": {
+      "type": "Source",
+      "value": "Stellar"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 1.3
+    },
+    "description": "Direct cosmic radiation without atmospheric filtering.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_desert_water",
+    "trigger": {
+      "type": "Environment",
+      "value": "Desert"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Water"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 0.8
+    },
+    "description": "Extreme aridity evaporates water.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_desert_earth",
+    "trigger": {
+      "type": "Environment",
+      "value": "Desert"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Earth"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "flat",
+      "value": 100
+    },
+    "description": "Abundance of sand and minerals.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_cyber_tech",
+    "trigger": {
+      "type": "Environment",
+      "value": "Cyber"
+    },
+    "target": {
+      "type": "Source",
+      "value": "Tech"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 1.3
+    },
+    "description": "Direct integration with the digital environment.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_cyber_mana",
+    "trigger": {
+      "type": "Environment",
+      "value": "Cyber"
+    },
+    "target": {
+      "type": "Source",
+      "value": "Mana"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 0.9
+    },
+    "description": "Artificial environment with low natural ether.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_dark_dark",
+    "trigger": {
+      "type": "Environment",
+      "value": "Dark"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Dark"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 1.2
+    },
+    "description": "Absolute darkness strengthens umbra.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_dark_light",
+    "trigger": {
+      "type": "Environment",
+      "value": "Dark"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Light"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 0.9
+    },
+    "description": "Light struggles to penetrate abyssal darkness.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_spectral_ki",
+    "trigger": {
+      "type": "Environment",
+      "value": "Spectral"
+    },
+    "target": {
+      "type": "Source",
+      "value": "Ki"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 0.8
+    },
+    "description": "The spirit world drains vital energy.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_env_spectral_spiritual",
+    "trigger": {
+      "type": "Environment",
+      "value": "Spectral"
+    },
+    "target": {
+      "type": "Composition",
+      "value": "Spiritual"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 1.2
+    },
+    "description": "Spiritual entities are in their element.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_day_day_divine",
+    "trigger": {
+      "type": "Daytime",
+      "value": "Day"
+    },
+    "target": {
+      "type": "Source",
+      "value": "Divine"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "flat",
+      "value": 100
+    },
+    "description": "Peak of solar/holy power.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_day_day_vampire",
+    "trigger": {
+      "type": "Daytime",
+      "value": "Day"
+    },
+    "target": {
+      "type": "Race",
+      "value": "Vampire"
+    },
+    "effect": {
+      "stat": "Overall",
+      "type": "percentage",
+      "value": 0.8
+    },
+    "description": "Classic daylight weakening.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_day_night_vampire",
+    "trigger": {
+      "type": "Daytime",
+      "value": "Night"
+    },
+    "target": {
+      "type": "Race",
+      "value": "Vampire"
+    },
+    "effect": {
+      "stat": "Overall",
+      "type": "percentage",
+      "value": 1.2
+    },
+    "description": "Peak of nocturnal power.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_day_night_werewolf",
+    "trigger": {
+      "type": "Daytime",
+      "value": "Night"
+    },
+    "target": {
+      "type": "Race",
+      "value": "Werewolf"
+    },
+    "effect": {
+      "stat": "STR",
+      "type": "flat",
+      "value": 200
+    },
+    "description": "Lunar influence boosts strength.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_day_night_dark",
+    "trigger": {
+      "type": "Daytime",
+      "value": "Night"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Dark"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 1.15
+    },
+    "description": "Shadows are longer and denser.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_day_night_light",
+    "trigger": {
+      "type": "Daytime",
+      "value": "Night"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Light"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 0.9
+    },
+    "description": "Absence of primary light source.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_day_night_assassin",
+    "trigger": {
+      "type": "Daytime",
+      "value": "Night"
+    },
+    "target": {
+      "type": "CombatClass",
+      "value": "Assassin"
+    },
+    "effect": {
+      "stat": "SPD",
+      "type": "flat",
+      "value": 100
+    },
+    "description": "Shadow cover aids movement.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_special_tech_lightning",
+    "trigger": {
+      "type": "Source",
+      "value": "Tech"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Lightning"
+    },
+    "effect": {
+      "stat": "HP",
+      "type": "percentage",
+      "value": 0.9
+    },
+    "description": "Electronics are sensitive to overload.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_special_metallic_lightning",
+    "trigger": {
+      "type": "Composition",
+      "value": "Metallic"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Lightning"
+    },
+    "effect": {
+      "stat": "HP",
+      "type": "percentage",
+      "value": 0.8
+    },
+    "description": "Metal conducts electricity (Damage taken increases).",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_special_undead_divine",
+    "trigger": {
+      "type": "Composition",
+      "value": "Undead"
+    },
+    "target": {
+      "type": "Source",
+      "value": "Divine"
+    },
+    "effect": {
+      "stat": "HP",
+      "type": "percentage",
+      "value": 0.5
+    },
+    "description": "Holy power purifies the undead (Massive damage taken).",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_special_undead_toxic",
+    "trigger": {
+      "type": "Composition",
+      "value": "Undead"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Toxic"
+    },
+    "effect": {
+      "stat": "HP",
+      "type": "flat",
+      "value": 9999
+    },
+    "description": "Undead cannot be poisoned (Immunity).",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_special_gaseous_physical",
+    "trigger": {
+      "type": "Composition",
+      "value": "Gaseous"
+    },
+    "target": {
+      "type": "Tag",
+      "value": "Physical"
+    },
+    "effect": {
+      "stat": "HP",
+      "type": "percentage",
+      "value": 0.2
+    },
+    "description": "Physical attacks pass through.",
+    "relationType": "versus"
+  },
+  {
+    "id": "rule_synergy_water_lightning",
+    "trigger": {
+      "type": "Element",
+      "value": "Water"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Lightning"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 1.2
+    },
+    "description": "Electro-Charged: Water amplifies electrical conductivity across the team.",
+    "relationType": "synergy"
+  },
+  {
+    "id": "rule_synergy_fire_air",
+    "trigger": {
+      "type": "Element",
+      "value": "Fire"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Air"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 1.15
+    },
+    "description": "Firestorm: Air feeds the flames, increasing combustion intensity.",
+    "relationType": "synergy"
+  },
+  {
+    "id": "rule_synergy_tank_healer",
+    "trigger": {
+      "type": "CombatClass",
+      "value": "Tank"
+    },
+    "target": {
+      "type": "CombatClass",
+      "value": "Healer"
+    },
+    "effect": {
+      "stat": "HP",
+      "type": "percentage",
+      "value": 1.2
+    },
+    "description": "Unbreakable Wall: Healer focuses on keeping the Tank alive, maximizing frontline endurance.",
+    "relationType": "synergy"
+  },
+  {
+    "id": "rule_synergy_tank_marksman",
+    "trigger": {
+      "type": "CombatClass",
+      "value": "Tank"
+    },
+    "target": {
+      "type": "CombatClass",
+      "value": "Marksman"
+    },
+    "effect": {
+      "stat": "STR",
+      "type": "percentage",
+      "value": 1.15
+    },
+    "description": "Frontline Cover: Tank draws aggro, allowing Marksman to fire freely without pressure.",
+    "relationType": "synergy"
+  },
+  {
+    "id": "rule_synergy_tech_tech",
+    "trigger": {
+      "type": "Source",
+      "value": "Tech"
+    },
+    "target": {
+      "type": "Source",
+      "value": "Tech"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "flat",
+      "value": 100
+    },
+    "description": "Network Link: Shared protocols enhance processing speed and data exchange.",
+    "relationType": "synergy"
+  },
+  {
+    "id": "rule_synergy_vampire_werewolf",
+    "trigger": {
+      "type": "Race",
+      "value": "Vampire"
+    },
+    "target": {
+      "type": "Race",
+      "value": "Werewolf"
+    },
+    "effect": {
+      "stat": "Overall",
+      "type": "percentage",
+      "value": 0.9
+    },
+    "description": "Blood Feud: Ancient rivalry causes lack of coordination (Anti-Synergy).",
+    "relationType": "synergy"
+  },
+  {
+    "id": "rule_synergy_light_dark",
+    "trigger": {
+      "type": "Element",
+      "value": "Light"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Dark"
+    },
+    "effect": {
+      "stat": "SP. ATK",
+      "type": "percentage",
+      "value": 1.3
+    },
+    "description": "Eclipse: The contrast of opposing forces creates unstable, explosive energy.",
+    "relationType": "synergy"
+  },
+  {
+    "id": "rule_synergy_aerial_melee",
+    "trigger": {
+      "type": "Movement",
+      "value": "Aerial"
+    },
+    "target": {
+      "type": "CombatClass",
+      "value": "Melee"
+    },
+    "effect": {
+      "stat": "SPD",
+      "type": "percentage",
+      "value": 1.2
+    },
+    "description": "Airdrop: Aerial ally carries Melee ally for rapid repositioning.",
+    "relationType": "synergy"
+  },
+  {
+    "id": "rule_synergy_ice_water",
+    "trigger": {
+      "type": "Element",
+      "value": "Ice"
+    },
+    "target": {
+      "type": "Element",
+      "value": "Water"
+    },
+    "effect": {
+      "stat": "HP",
+      "type": "flat",
+      "value": 200
+    },
+    "description": "Frozen Fortress: Water freezes to create additional barriers.",
+    "relationType": "synergy"
+  }
+]

@@ -1,0 +1,100 @@
+{
+  "1v1": {
+    "id": "1v1",
+    "mode": "1v1",
+    "label": "1v1 Duel",
+    "description": "Classic one-on-one combat.",
+    "config": {
+      "roundsToWin": 2,
+      "timeLimit": 99,
+      "ui": {
+        "showTimer": true,
+        "showStats": true,
+        "showTrumpButton": false,
+        "showExitButton": true
+      },
+      "layout": {
+        "slots": [
+          { "id": "p1", "x": 20, "y": 60, "scale": 1, "type": "player" },
+          { "id": "p2", "x": 80, "y": 60, "scale": 1, "type": "opponent" }
+        ]
+      }
+    }
+  },
+  "2v2": {
+    "id": "2v2",
+    "mode": "2v2",
+    "label": "2v2 Tag Team",
+    "description": "Two fighters per team, tag mechanics enabled.",
+    "config": {
+      "roundsToWin": 1,
+      "timeLimit": 180,
+      "ui": {
+        "showTimer": true,
+        "showStats": true,
+        "showTrumpButton": false,
+        "showExitButton": true
+      },
+      "layout": {
+        "slots": [
+          { "id": "t1_active", "x": 25, "y": 60, "scale": 1, "type": "player" },
+          { "id": "t1_bench", "x": 10, "y": 70, "scale": 0.8, "type": "player" },
+          { "id": "t2_active", "x": 75, "y": 60, "scale": 1, "type": "opponent" },
+          { "id": "t2_bench", "x": 90, "y": 70, "scale": 0.8, "type": "opponent" }
+        ]
+      }
+    }
+  },
+  "squad_4v4": {
+    "id": "squad_4v4",
+    "mode": "squad_4v4",
+    "label": "Squad Out (4v4)",
+    "description": "4v4 Team Elimination Battle.",
+    "config": {
+      "teamSize": 4,
+      "roundsToWin": 1,
+      "timeLimit": 300,
+      "ui": {
+        "showTimer": true,
+        "showStats": false
+      },
+      "layout": {
+        "slots": []
+      }
+    }
+  },
+  "boss_raid": {
+    "id": "boss_raid",
+    "mode": "boss_raid",
+    "label": "Boss Raid",
+    "description": "Co-op battle against a powerful boss.",
+    "config": {
+      "bossMultiplier": 2.5,
+      "timeLimit": 600,
+      "ui": {
+        "showTimer": true,
+        "showStats": true
+      },
+      "layout": {
+        "slots": []
+      }
+    }
+  },
+  "stats_battle": {
+    "id": "stats_battle",
+    "mode": "stats_battle",
+    "label": "Stats Battle",
+    "description": "Strategy card game based on stats.",
+    "config": {
+      "deckSize": 10,
+      "roundsToWin": 3,
+      "ui": {
+        "showTimer": false,
+        "showTrumpButton": true
+      },
+      "layout": {
+        "slots": []
+      }
+    }
+  }
+}
