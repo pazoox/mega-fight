@@ -1,24 +1,5 @@
 [
   {
-    "name": "Zephyr Peaks Plateau",
-    "description": "A vast, high-altitude valley where towering cumulus clouds swirl into massive cyclonic patterns. Modern wind turbines dot the jagged mountain ridges, harvesting the relentless gales that sweep across the vibrant green plains below.",
-    "image": "",
-    "video": "https://gzffvlbocixlqwbnpint.supabase.co/storage/v1/object/public/backgrounds/matrix-patterns-orbits-moewalls-com.mp4",
-    "folder": "Rotation",
-    "daytime": "Day",
-    "weather": "Windy",
-    "environment": [
-      "Mountain",
-      "Cyber"
-    ],
-    "difficulty": {
-      "space": 50,
-      "magic": 50,
-      "complexity": 50
-    },
-    "id": "zephyr-peaks-plateau"
-  },
-  {
     "name": "Thundercloud Crag",
     "description": "A rugged, moss-covered mountain peak bathed in an eerie, golden light beneath a massive, oppressive canopy of dark, roiling storm clouds.",
     "image": "",
