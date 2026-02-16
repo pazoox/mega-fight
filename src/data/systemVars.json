@@ -531,6 +531,11 @@
       "value": "Sand",
       "description": "Small Minerals",
       "icon": "LucideTriangle"
+    },
+    {
+      "value": "Energy",
+      "description": "Spiritual Control",
+      "icon": "LucideTarget"
     }
   ],
   "arenaDaytimes": [

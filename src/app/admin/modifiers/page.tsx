@@ -270,65 +270,69 @@ export default function ModifiersPage() {
   }
 
   const saveToBackend = async (newCombatVars: any, newArenaVars: any) => {
-    const payload: any = {}
-    
-    // Process Combat Vars
-    Object.entries(newCombatVars).forEach(([key, data]: [string, any]) => {
-        const backendKey = KEY_MAPPING[key]
-        if (backendKey) {
-            payload[backendKey] = data.values.map((item: any) => {
-                // Find icon name
-                let iconName = 'CircleDot'
-                if (item.icon) {
-                    // Check if it's a string
-                    if (typeof item.icon === 'string') {
-                        iconName = item.icon
-                    } else {
-                        // It's a component, find its name in LucideIcons
-                        const foundName = Object.keys(LucideIcons).find(k => (LucideIcons as any)[k] === item.icon)
-                        if (foundName) iconName = foundName
-                    }
-                }
-                return {
-                    value: item.value,
-                    description: item.description,
-                    icon: iconName
-                }
-            })
-        }
-    })
-
-    // Process Arena Vars
-    Object.entries(newArenaVars).forEach(([key, data]: [string, any]) => {
-        const backendKey = KEY_MAPPING[key]
-        if (backendKey) {
-            payload[backendKey] = data.values.map((item: any) => {
-                let iconName = 'CircleDot'
-                if (item.icon) {
-                    if (typeof item.icon === 'string') {
-                        iconName = item.icon
-                    } else {
-                        const foundName = Object.keys(LucideIcons).find(k => (LucideIcons as any)[k] === item.icon)
-                        if (foundName) iconName = foundName
-                    }
-                }
-                return {
-                    value: item.value,
-                    description: item.description,
-                    icon: iconName
-                }
-            })
-        }
-    })
-
     try {
-        await fetch('/api/system-vars', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
+      const existingRes = await fetch('/api/system-vars')
+      const existingData = existingRes.ok ? await existingRes.json() : {}
+
+      const payload: any = { ...existingData }
+      
+      Object.entries(newCombatVars).forEach(([key, data]: [string, any]) => {
+        const backendKey = KEY_MAPPING[key]
+        if (backendKey) {
+          payload[backendKey] = data.values.map((item: any) => {
+            let iconName = 'CircleDot'
+            if (item.icon) {
+              if (typeof item.icon === 'string') {
+                iconName = item.icon
+              } else {
+                const foundName = Object.keys(LucideIcons).find(k => (LucideIcons as any)[k] === item.icon)
+                if (foundName) iconName = foundName
+              }
+            }
+            return {
+              value: item.value,
+              description: item.description,
+              icon: iconName
+            }
+          })
+        }
+      })
+
+      Object.entries(newArenaVars).forEach(([key, data]: [string, any]) => {
+        const backendKey = KEY_MAPPING[key]
+        if (backendKey) {
+          payload[backendKey] = data.values.map((item: any) => {
+            let iconName = 'CircleDot'
+            if (item.icon) {
+              if (typeof item.icon === 'string') {
+                iconName = item.icon
+              } else {
+                const foundName = Object.keys(LucideIcons).find(k => (LucideIcons as any)[k] === item.icon)
+                if (foundName) iconName = foundName
+              }
+            }
+            return {
+              value: item.value,
+              description: item.description,
+              icon: iconName
+            }
+          })
+        }
+      })
+
+      const saveRes = await fetch('/api/system-vars', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      if (!saveRes.ok) {
+        console.error('Failed to save system vars: ', await saveRes.text())
+      } else {
+        fetchSystemVars()
+      }
     } catch (error) {
-        console.error('Failed to save system vars:', error)
+      console.error('Failed to save system vars:', error)
     }
   }
 
