@@ -436,6 +436,11 @@
       "icon": "Brain"
     },
     {
+      "value": "Physical",
+      "description": "Raw Strength",
+      "icon": "Dumbbell"
+    },
+    {
       "value": "Alchemical",
       "description": "Transmutation",
       "icon": "FlaskConical"
