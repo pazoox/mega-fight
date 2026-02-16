@@ -96,17 +96,23 @@ export default function ArenaForm({ initialData }: ArenaFormProps) {
   }, [])
 
   // Computed Options (Merge System Vars with Constants or override)
-  const availableDaytimes = systemVars?.arenaDaytimes 
-    ? systemVars.arenaDaytimes.map((d: any) => ({ ...d, icon: processIcon(d.icon) }))
-    : ARENA_DAYTIME_DATA
+  const availableDaytimes = (
+    systemVars?.arenaDaytimes 
+      ? systemVars.arenaDaytimes.map((d: any) => ({ ...d, icon: processIcon(d.icon) }))
+      : ARENA_DAYTIME_DATA
+  ).slice().sort((a: any, b: any) => a.value.localeCompare(b.value))
 
-  const availableWeathers = systemVars?.weathers
-    ? systemVars.weathers.map((w: any) => ({ ...w, icon: processIcon(w.icon) }))
-    : WEATHERS_DATA
+  const availableWeathers = (
+    systemVars?.weathers
+      ? systemVars.weathers.map((w: any) => ({ ...w, icon: processIcon(w.icon) }))
+      : WEATHERS_DATA
+  ).slice().sort((a: any, b: any) => a.value.localeCompare(b.value))
 
-  const availableEnvironments = systemVars?.environments
-    ? systemVars.environments.map((e: any) => ({ ...e, icon: processIcon(e.icon) }))
-    : ENVIRONMENTS_DATA
+  const availableEnvironments = (
+    systemVars?.environments
+      ? systemVars.environments.map((e: any) => ({ ...e, icon: processIcon(e.icon) }))
+      : ENVIRONMENTS_DATA
+  ).slice().sort((a: any, b: any) => a.value.localeCompare(b.value))
 
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'video') => {

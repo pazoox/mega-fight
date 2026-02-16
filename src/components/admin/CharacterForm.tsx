@@ -98,7 +98,7 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
   const sources = systemVars?.sources || SOURCE_DATA
   const elements = systemVars?.elements || ELEMENT_DATA
   const skillTags = systemVars?.skillTags || SKILL_TAGS_DATA
-  const systemRaces = systemVars?.races?.map((r: any) => r.value) || []
+  const systemRaces = (systemVars?.races?.map((r: any) => r.value) || []).sort((a: string, b: string) => a.localeCompare(b))
 
   // Fetch Data
   useEffect(() => {
@@ -480,44 +480,59 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
   }
 
   // Constants
-  const COMBAT_CLASSES = combatClasses.map((c: any) => ({
-    label: c.value,
-    value: c.value,
-    description: c.description,
-    icon: c.icon
-  }))
-  const MOVEMENT_TYPES = movements.map((c: any) => ({
-    label: c.value,
-    value: c.value,
-    description: c.description,
-    icon: c.icon
-  }))
-  const COMPOSITION_TYPES = compositions.map((c: any) => ({
-    label: c.value,
-    value: c.value,
-    description: c.description,
-    icon: c.icon
-  }))
-  const SOURCE_TYPES = sources.map((c: any) => ({
-    label: c.value,
-    value: c.value,
-    description: c.description,
-    icon: c.icon
-  }))
-  
-  const ELEMENTS = elements.map((c: any) => ({
-    label: c.value,
-    value: c.value,
-    description: c.description,
-    icon: c.value === 'Sunny' ? Sun : c.icon
-  }))
+  const COMBAT_CLASSES = combatClasses
+    .map((c: any) => ({
+      label: c.value,
+      value: c.value,
+      description: c.description,
+      icon: c.icon
+    }))
+    .sort((a: any, b: any) => a.label.localeCompare(b.label))
 
-  const SKILL_TAG_OPTIONS = skillTags.map((c: any) => ({
-    label: c.value,
-    value: c.value,
-    description: c.description,
-    icon: c.icon
-  }))
+  const MOVEMENT_TYPES = movements
+    .map((c: any) => ({
+      label: c.value,
+      value: c.value,
+      description: c.description,
+      icon: c.icon
+    }))
+    .sort((a: any, b: any) => a.label.localeCompare(b.label))
+
+  const COMPOSITION_TYPES = compositions
+    .map((c: any) => ({
+      label: c.value,
+      value: c.value,
+      description: c.description,
+      icon: c.icon
+    }))
+    .sort((a: any, b: any) => a.label.localeCompare(b.label))
+
+  const SOURCE_TYPES = sources
+    .map((c: any) => ({
+      label: c.value,
+      value: c.value,
+      description: c.description,
+      icon: c.icon
+    }))
+    .sort((a: any, b: any) => a.label.localeCompare(b.label))
+  
+  const ELEMENTS = elements
+    .map((c: any) => ({
+      label: c.value,
+      value: c.value,
+      description: c.description,
+      icon: c.value === 'Sunny' ? Sun : c.icon
+    }))
+    .sort((a: any, b: any) => a.label.localeCompare(b.label))
+
+  const SKILL_TAG_OPTIONS = skillTags
+    .map((c: any) => ({
+      label: c.value,
+      value: c.value,
+      description: c.description,
+      icon: c.icon
+    }))
+    .sort((a: any, b: any) => a.label.localeCompare(b.label))
 
   const STAT_FIELDS = [
     { key: 'hp', label: 'HP (Health)', icon: Heart },
@@ -811,7 +826,7 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
                              {currentStageIndex === 0 ? 'Race' : 'Race (Override)'}
                          </label>
                          <CustomSelect
-                            options={systemRaces.length > 0 ? systemRaces : ['Human', 'Android', 'Alien', 'Unknown', 'Mutant', 'Cyborg', 'Demon', 'Angel', 'Deity']}
+                            options={systemRaces.length > 0 ? systemRaces : ['Alien', 'Android', 'Angel', 'Cyborg', 'Deity', 'Demon', 'Human', 'Mutant', 'Unknown']}
                             value={currentStageIndex === 0 ? (formData.specs?.race || 'Human') : (currentStage.race ?? '')}
                             onChange={v => {
                                 if (currentStageIndex === 0) handleSpecChange('race', v)
