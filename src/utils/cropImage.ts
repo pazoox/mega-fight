@@ -80,8 +80,8 @@ export default async function getCroppedImg(
   // paste generated rotate image at the top left corner
   ctx.putImageData(data, 0, 0)
 
-  // Resize if too large (Max 600x600 for performance/storage)
-  const MAX_SIZE = 600
+  // Resize if too large (Max 1200x1200 for improved in-game quality)
+  const MAX_SIZE = 1200
   if (canvas.width > MAX_SIZE || canvas.height > MAX_SIZE) {
     const resizedCanvas = document.createElement('canvas')
     resizedCanvas.width = MAX_SIZE
@@ -89,10 +89,10 @@ export default async function getCroppedImg(
     const ctxResized = resizedCanvas.getContext('2d')
     if (ctxResized) {
       ctxResized.drawImage(canvas, 0, 0, MAX_SIZE, MAX_SIZE)
-      return resizedCanvas.toDataURL('image/jpeg', 0.8)
+      return resizedCanvas.toDataURL('image/jpeg', 0.9)
     }
   }
 
   // As Base64 string
-  return canvas.toDataURL('image/jpeg', 0.8)
+  return canvas.toDataURL('image/jpeg', 0.9)
 }

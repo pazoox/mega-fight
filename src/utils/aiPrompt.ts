@@ -173,6 +173,13 @@ ${skillTags.map((t: any) => `*   \`${t.value}\`: ${t.description}`).join('\n')}
 ## Stat Tiers & Power Scale (0-2000)
 Use this guide to determine stat values. The scale defines the narrative description of the character's capabilities.
 
+### Stat Philosophy (Cross-Universe)
+- The 0 to 2000 range is **absolute across universes**. Ignore original setting "power levels" or franchise ceilings.
+- **Each stat is independent**: HP, STR, DEF, SPD, STA, SP_ATK, INT, and ATK_SPD can all live in very different ranges for the same character.
+- When choosing a value, ask: **"What can this specific attribute actually affect, injure, or endure, even against gods or cosmic entities?"**
+- A character from a "weaker" universe may have an **extremely high stat spike** if the concept of their ability allows it (e.g., Absolute Anti-Magic, Dimensional Slash, conceptual hax).
+- Example: a swordsman from a grounded anime can have HP/DEF around 700–900, but **SP_ATK in the 1500+ range** if their signature slash can cut through anything, including cosmic beings.
+
 **Ranges:**
 - **0 - 100 (Human):** Normal biological limits.
 - **101 - 300 (Superhuman):** Enhanced capabilities beyond natural limits.
@@ -338,8 +345,8 @@ STAT GUIDELINES (0-2000):
 Use the "Power Scale" multiplier concept. Characters who transform (Super Saiyan) or have variable power output should have relevant stats scaled.
 
 IMPORTANT GUIDELINES:
-1. **Canon Scale**: MUST be one of the exact numbers listed above.
-2. **Stats (0-2000)**: If a stat doesn't apply, set it to 0 or low.
+1. **Canon Scale**: Used only as a loose narrative tier for the franchise. It must **never** be treated as a hard cap for any stat. Stats can exceed what the original setting suggests if the character’s abilities justify it.
+2. **Stats (0-2000)**: Every stat is independent and absolute across universes. If a stat doesn't apply, set it to 0 or low.
 3. **Specs**:
    - **Height**: MUST be in **CENTIMETERS** (e.g., 175, not 1.75).
    - **Weight**: In **KG**.

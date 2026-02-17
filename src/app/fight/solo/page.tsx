@@ -145,10 +145,14 @@ function generateChallengeTeam(
        }
     }
 
-    // -- Power Scale Filters (Canon Scale) --
+    // -- Power Scale Filters (no Canon Scale) --
+    // Align with removal of canon_scale: use max stage stats range when powerScale is enabled
     if (config.usePowerScale && config.powerRange) {
         pool = pool.filter(c => {
-            return c.canonScale >= (config.powerRange?.min || 0) && c.canonScale <= (config.powerRange?.max || 1000);
+            const maxStats = Math.max(...c.stages.map(s => 
+                Object.values(s.stats).reduce((a, b) => (typeof a === 'number' ? a : 0) + (typeof b === 'number' ? b : 0), 0) as number
+            ));
+            return maxStats >= (config.powerRange?.min || 0) && maxStats <= (config.powerRange?.max || 99999);
         });
     }
 
@@ -1470,7 +1474,9 @@ function SoloFightContent() {
              )}
 
             <div 
-              className={`${isPokerLayoutP1 ? 'flex justify-center flex-nowrap -space-x-72 hover:-space-x-56 transition-all duration-300 py-10 px-4' : `flex justify-center ${p1Count >= 3 ? 'flex-nowrap -space-x-16' : (isP1Compact ? 'flex-nowrap gap-6' : 'flex-wrap gap-4')}`} ${matchWinner && p1Team && matchWinner.id !== p1Team.id ? 'opacity-30 grayscale blur-sm' : ''} transition-all duration-500`}
+              className={`${isPokerLayoutP1 
+                ? 'flex justify-center flex-nowrap sm:-space-x-36 md:-space-x-56 lg:-space-x-72 hover:sm:-space-x-28 hover:md:-space-x-40 hover:lg:-space-x-56 transition-all duration-300 sm:py-6 md:py-8 lg:py-10 sm:px-2 md:px-4' 
+                : `flex justify-center ${p1Count >= 3 ? 'flex-nowrap sm:-space-x-8 md:-space-x-12 lg:-space-x-16' : (isP1Compact ? 'flex-nowrap gap-4 md:gap-6' : 'flex-wrap gap-3 md:gap-4')}` } ${matchWinner && p1Team && matchWinner.id !== p1Team.id ? 'opacity-30 grayscale blur-sm' : ''} transition-all duration-500`}
               onMouseMove={isP1Compact && !isPokerLayoutP1 ? (e) => handleTeamMouseMove(e, p1TeamX, p1TeamY) : undefined}
               onMouseLeave={isP1Compact && !isPokerLayoutP1 ? () => handleTeamMouseLeave(p1TeamX, p1TeamY) : undefined}
             >
@@ -1503,7 +1509,7 @@ function SoloFightContent() {
           </div>
 
           {/* VS / Timer Section */}
-          <div className={`flex flex-col items-center justify-center z-10 ${isCompactLayout ? 'w-32 md:w-40' : 'w-96'} shrink-0`}>
+          <div className={`flex flex-col items-center justify-center z-10 ${isCompactLayout ? 'w-28 sm:w-32 md:w-40' : 'w-80 sm:w-88 md:w-96'} shrink-0`}>
              <AnimatePresence mode="wait">
                {matchWinner ? (
                  <motion.div 
@@ -1573,7 +1579,9 @@ function SoloFightContent() {
              )}
 
             <div 
-              className={`${isPokerLayoutP2 ? 'flex justify-center flex-nowrap -space-x-72 hover:-space-x-56 transition-all duration-300 py-10 px-4' : `flex justify-center ${p2Count >= 3 ? 'flex-nowrap -space-x-16' : (isP2Compact ? 'flex-nowrap gap-6' : 'flex-wrap gap-4')}`} ${matchWinner && p2Team && matchWinner.id !== p2Team.id ? 'opacity-30 grayscale blur-sm' : ''} transition-all duration-500`}
+              className={`${isPokerLayoutP2 
+                ? 'flex justify-center flex-nowrap sm:-space-x-36 md:-space-x-56 lg:-space-x-72 hover:sm:-space-x-28 hover:md:-space-x-40 hover:lg:-space-x-56 transition-all duration-300 sm:py-6 md:py-8 lg:py-10 sm:px-2 md:px-4' 
+                : `flex justify-center ${p2Count >= 3 ? 'flex-nowrap sm:-space-x-8 md:-space-x-12 lg:-space-x-16' : (isP2Compact ? 'flex-nowrap gap-4 md:gap-6' : 'flex-wrap gap-3 md:gap-4')}` } ${matchWinner && p2Team && matchWinner.id !== p2Team.id ? 'opacity-30 grayscale blur-sm' : ''} transition-all duration-500`}
               onMouseMove={isP2Compact && !isPokerLayoutP2 ? (e) => handleTeamMouseMove(e, p2TeamX, p2TeamY) : undefined}
               onMouseLeave={isP2Compact && !isPokerLayoutP2 ? () => handleTeamMouseLeave(p2TeamX, p2TeamY) : undefined}
             >

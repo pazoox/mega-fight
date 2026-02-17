@@ -29,12 +29,12 @@ const mapToCharacter = (row: any): Character => ({
   alias: row.alias,
   description: row.description,
   groupId: row.group_id,
-  canonScale: row.canon_scale,
   specs: row.specs,
   stages: row.stages,
   isActive: row.is_active,
   wins: row.wins || 0,
-  matches: row.matches || 0
+  matches: row.matches || 0,
+  cardLayout: row.card_layout
 });
 
 // Helper to map Frontend Character to DB Insert
@@ -46,12 +46,12 @@ const mapToDb = (char: Partial<Character>, groupUuid?: string | null) => {
   if (char.description !== undefined) payload.description = char.description;
   if (groupUuid !== undefined) payload.group_id = groupUuid;
   else if (char.groupId !== undefined) payload.group_id = char.groupId;
-  if ((char as any).canonScale !== undefined) payload.canon_scale = (char as any).canonScale;
   if (char.specs !== undefined) payload.specs = char.specs;
   if (char.stages !== undefined) payload.stages = char.stages;
   if (char.isActive !== undefined) payload.is_active = char.isActive;
   if (char.wins !== undefined) payload.wins = char.wins;
   if (char.matches !== undefined) payload.matches = char.matches;
+  if (char.cardLayout !== undefined) payload.card_layout = char.cardLayout;
   return payload;
 };
 
@@ -78,7 +78,7 @@ export async function GET(request: Request) {
     const hasFilter = Boolean(id || groupId);
 
     const baseSelect = mode === 'list'
-      ? 'id,name,group_id,stages,is_active'
+      ? 'id,name,group_id,stages,is_active,card_layout'
       : '*';
 
     let query = supabaseAdmin
@@ -207,7 +207,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const newCharacter: Character = await request.json();
+    const newCharacter: Partial<Character> = await request.json();
 
     // Basic validation
     if (!newCharacter.name || !newCharacter.groupId) {
@@ -217,9 +217,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!newCharacter.id) {
-      newCharacter.id = randomUUID();
-    }
+    const id = (newCharacter as any).id || randomUUID();
 
     if (!supabaseAdmin) {
       return NextResponse.json(
@@ -231,7 +229,7 @@ export async function POST(request: Request) {
     // Insert into Supabase
     const { data, error } = await supabaseAdmin
         .from('characters')
-        .insert(mapToDb(newCharacter))
+        .insert(mapToDb({ ...newCharacter, id }))
         .select()
         .single();
 
@@ -250,7 +248,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const updatedCharacter: Character = await request.json();
+    const updatedCharacter: Partial<Character> = await request.json();
 
     if (!updatedCharacter.id) {
       return NextResponse.json({ error: 'Character ID is required' }, { status: 400 });

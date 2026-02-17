@@ -56,14 +56,14 @@ export async function GET(request: Request) {
             alias: row.alias,
             description: row.description,
             groupId: row.group_id,
-            canonScale: row.canon_scale,
             specs: row.specs,
             stages: row.stages,
             isActive: row.is_active,
             createdAt: row.created_at,
             updatedAt: row.updated_at,
             wins: row.wins || 0,
-            matches: row.matches || 0
+            matches: row.matches || 0,
+            cardLayout: row.card_layout
         }))
         
         return NextResponse.json(mappedFighters)
@@ -132,12 +132,12 @@ export async function POST(request: Request) {
             alias: body.alias,
             description: body.description,
             group_id: groupId,
-            canon_scale: body.canonScale || 0,
             specs: body.specs,
             stages: body.stages,
             is_active: true,
             wins: 0,
-            matches: 0
+            matches: 0,
+            card_layout: body.cardLayout
         }
         
         const { data: fighterData, error: fighterError } = await supabaseAdmin
@@ -222,6 +222,7 @@ export async function PUT(request: Request) {
             // canon_scale: body.canonScale, // Users usually shouldn't change this, but keeping it flexible for now
             specs: body.specs,
             stages: body.stages,
+            card_layout: body.cardLayout,
             updated_at: new Date().toISOString()
         }
 

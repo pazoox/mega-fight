@@ -62,10 +62,13 @@ export function generateChallengeTeam(
        }
     }
 
-    // -- Power Scale Filters (Canon Scale) --
+    // -- Power Scale Filters (Stats-based Range) --
     if (config.usePowerScale && config.powerRange) {
         pool = pool.filter(c => {
-            return c.canonScale >= (config.powerRange?.min || 0) && c.canonScale <= (config.powerRange?.max || 1000);
+            const maxStats = Math.max(...c.stages.map(s => 
+                Object.values(s.stats).reduce((a, b) => (typeof a === 'number' ? a : 0) + (typeof b === 'number' ? b : 0), 0) as number
+            ));
+            return maxStats >= (config.powerRange?.min || 0) && maxStats <= (config.powerRange?.max || 99999);
         });
     }
 

@@ -85,7 +85,7 @@ export interface Character {
   alias?: string; // Alter Ego or Real Name (e.g. "Eren Yeager" for "Attack Titan")
   description?: string; // Short bio/lore
   groupId: string; // Previously franchiseId
-  canonScale: number; // 1.0 - 1000.0 (Global Tier Hint)
+  canonScale?: number;
   wins?: number;
   matches?: number;
   specs: CharacterSpecs;

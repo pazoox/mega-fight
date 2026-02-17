@@ -500,7 +500,9 @@ export function CharacterCard({ character, stageIndex = 0, isWinner, onClick, di
                 NO IMAGE
               </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-black/95 pointer-events-none" />
+            {(!character.cardLayout || character.cardLayout === 'classic') && (
+              <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/80 via-black/20 to-black/95" />
+            )}
           </div>
 
           {/* Content Layer */}
@@ -933,12 +935,8 @@ function StatRow({ icon, color, bg, baseValue, currentValue, originalValue, labe
   const basePct = Math.min((baseValue / maxStatValue) * 100, 100);
   const currentPct = Math.min((currentValue / maxStatValue) * 100, 100);
   
-  // Determine value color class based on Buff/Nerf status
-  const valueClass = isBuff 
-    ? "text-zinc-100 font-normal drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]"
-    : isNerf
-    ? "text-red-400 font-normal"
-    : "text-zinc-200 font-normal";
+  // Match numbers style to stat titles
+  const valueClass = "text-[10px] font-bold text-zinc-400 leading-none tracking-wider";
 
   return (
     <div className={`flex items-center gap-2 ${color}`}>
@@ -955,7 +953,7 @@ function StatRow({ icon, color, bg, baseValue, currentValue, originalValue, labe
       <div className="flex-1 flex flex-col gap-0.5">
         <div className="flex justify-between items-end">
           <span className="text-[10px] font-bold text-zinc-400 leading-none tracking-wider">{label}</span>
-          <span className={`text-sm leading-none ${valueClass}`}>
+          <span className={`${valueClass}`}>
             {currentValue}
           </span>
         </div>

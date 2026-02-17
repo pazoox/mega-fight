@@ -63,7 +63,9 @@ export const SOURCE_DATA = [
   { value: 'Biological', description: 'Organic evolution', icon: Dna },
   { value: 'Psionic', description: 'Mental energy', icon: Brain },
   { value: 'Alchemical', description: 'Transmutation', icon: FlaskConical },
-  { value: 'Stellar', description: 'Star-based radiation', icon: Star }
+  { value: 'Stellar', description: 'Star-based radiation', icon: Star },
+  { value: 'Demonic', description: 'Pact with the Devil, Possessed by a Demon or Devil itself.', icon: Skull },
+  { value: 'Spiritual', description: 'Spiritual Connection', icon: Ghost }
 ] as const;
 
 export const ELEMENT_DATA = [
@@ -81,7 +83,9 @@ export const ELEMENT_DATA = [
   { value: 'Radiation', description: 'Nuclear/Atomic decay', icon: Radio },
   { value: 'Gravity', description: 'Weight/Spatial curvature', icon: Anchor },
   { value: 'Toxic', description: 'Poison/Corrosion', icon: Biohazard },
-  { value: 'Sound', description: 'Vibration/Frequency', icon: Volume2 }
+  { value: 'Sound', description: 'Vibration/Frequency', icon: Volume2 },
+  { value: 'Sand', description: 'Small Minerals', icon: Tent },
+  { value: 'Energy', description: 'Spiritual Control', icon: Sparkles }
 ] as const;
 
 export const COMMON_RACES = [

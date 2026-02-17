@@ -454,6 +454,11 @@
       "value": "Demonic",
       "description": "Pact with the Devil, Possessed by a Demon or Devil itself.",
       "icon": "LucideSkull"
+    },
+    {
+      "value": "Spiritual",
+      "description": "Spiritual Connection",
+      "icon": "Ghost"
     }
   ],
   "elements": [
