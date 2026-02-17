@@ -15,8 +15,10 @@ export default function FightersPage() {
   const [page, setPage] = useState(0)
   const [hasMore, setHasMore] = useState(true)
   const [backfilledIds, setBackfilledIds] = useState<Set<string>>(new Set())
+  const [currentPage, setCurrentPage] = useState(1)
 
   const PAGE_SIZE = 50
+  const UI_PAGE_SIZE = 21
 
   useEffect(() => {
     const loadInitial = async () => {
@@ -132,6 +134,12 @@ export default function FightersPage() {
     return matchesSearch && matchesGroup
   })
 
+  const totalPages = Math.max(1, Math.ceil(filteredCharacters.length / UI_PAGE_SIZE))
+  const safePage = Math.min(currentPage, totalPages)
+  const startIndex = (safePage - 1) * UI_PAGE_SIZE
+  const endIndex = startIndex + UI_PAGE_SIZE
+  const paginatedCharacters = filteredCharacters.slice(startIndex, endIndex)
+
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.preventDefault()
     e.stopPropagation()
@@ -149,6 +157,10 @@ export default function FightersPage() {
       console.error('Failed to delete fighter', error)
     }
   }
+
+  React.useEffect(() => {
+    setCurrentPage(1)
+  }, [search, selectedGroup])
 
   // Rank Helpers (Duplicated to avoid complex imports if not shared)
   const calculateRank = (total: number) => {
@@ -227,7 +239,7 @@ export default function FightersPage() {
       ) : (
         <>
         <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3">
-          {filteredCharacters.map(char => {
+          {paginatedCharacters.map(char => {
             const groupName = groups.find(g => g.id === char.groupId)?.name || 'Unknown'
             
             // Find strongest stage for display
@@ -297,6 +309,32 @@ export default function FightersPage() {
             )
           })}
         </div>
+        {filteredCharacters.length > 0 && (
+          <div className="flex items-center justify-between mt-4 text-xs text-zinc-400">
+            <span>
+              Showing {startIndex + 1}-{Math.min(endIndex, filteredCharacters.length)} of {filteredCharacters.length}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={safePage === 1}
+                className="px-3 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-[11px] font-bold text-zinc-300 hover:border-orange-500 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+              <span className="text-zinc-500">
+                Page {safePage} / {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={safePage === totalPages}
+                className="px-3 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-[11px] font-bold text-zinc-300 hover:border-orange-500 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
         {hasMore && (
           <div className="flex justify-center mt-8">
             <button

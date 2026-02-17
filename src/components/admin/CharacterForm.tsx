@@ -100,6 +100,18 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
   const skillTags = systemVars?.skillTags || SKILL_TAGS_DATA
   const systemRaces = (systemVars?.races?.map((r: any) => r.value) || []).sort((a: string, b: string) => a.localeCompare(b))
 
+  const normalizeSource = (value: string | undefined) => {
+    if (!value) return 'Biological'
+    if (value === 'Bio') return 'Biological'
+    return value
+  }
+
+  const normalizeElement = (value: string | undefined) => {
+    if (!value) return 'Aether'
+    if (value === 'Neutral') return 'Aether'
+    return value
+  }
+
   // Fetch Data
   useEffect(() => {
     fetch('/api/system-vars').then(res => res.json()).then(data => {
@@ -159,8 +171,8 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
                     ...s.tags,
                     combatClass: Array.isArray(s.tags.combatClass) ? s.tags.combatClass : [s.tags.combatClass || 'Assault'],
                     movement: Array.isArray(s.tags.movement) ? s.tags.movement : [s.tags.movement || 'Terrestrial'],
-                    source: Array.isArray(s.tags.source) ? s.tags.source : [s.tags.source || 'Bio'],
-                    element: Array.isArray(s.tags.element) ? s.tags.element : [s.tags.element || 'Neutral'],
+                    source: Array.isArray(s.tags.source) ? s.tags.source.map((v: string) => normalizeSource(v)) : [normalizeSource(s.tags.source)],
+                    element: Array.isArray(s.tags.element) ? s.tags.element.map((v: string) => normalizeElement(v)) : [normalizeElement(s.tags.element)],
                 }
             }))
             setFormData(found)
@@ -245,6 +257,20 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
   }
 
   const handleImageCropped = async (croppedImage: string) => {
+    if (croppedImage === '') {
+      setFormData(prev => {
+        const newStages = [...(prev.stages || [])]
+        const idx = currentStageIndex
+        if (newStages[idx]) {
+          newStages[idx] = { ...newStages[idx], image: '', thumbnail: '' }
+        }
+        return { ...prev, stages: newStages }
+      })
+      setPendingImage(null)
+      setPendingThumb(null)
+      setShowLayoutModal(false)
+      return
+    }
     setPendingImage(croppedImage)
     const thumb = await (async () => {
       const img = new Image()
