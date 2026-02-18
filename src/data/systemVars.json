@@ -184,6 +184,56 @@
       "value": "Beastman",
       "description": "Canonical Beastman race",
       "icon": "Dna"
+    },
+    {
+      "value": "Magical Beast",
+      "description": "Animals from Magic Worlds",
+      "icon": "Dna"
+    },
+    {
+      "value": "Unopan",
+      "description": "From the Invencible Universe",
+      "icon": "Dna"
+    },
+    {
+      "value": "Clone",
+      "description": "A version of someone else",
+      "icon": "FlaskConical"
+    },
+    {
+      "value": "Viltrumite",
+      "description": "From the Planet Viltrum",
+      "icon": "LucideOrbit"
+    },
+    {
+      "value": "Eternal",
+      "description": "Celestial Breeders",
+      "icon": "Dna"
+    },
+    {
+      "value": "Symbiote",
+      "description": "",
+      "icon": "Dna"
+    },
+    {
+      "value": "Shinobi",
+      "description": "Trained Ninja",
+      "icon": "Dna"
+    },
+    {
+      "value": "Jinchuriki",
+      "description": "Tailed Beast Host",
+      "icon": "Dna"
+    },
+    {
+      "value": "Mecha",
+      "description": "Robot-Like",
+      "icon": "LucideSettings"
+    },
+    {
+      "value": "Hunter",
+      "description": "Mana Wielder",
+      "icon": "Dna"
     }
   ],
   "combatClasses": [
@@ -392,6 +442,16 @@
       "value": "Undead",
       "description": "Reanimated organic",
       "icon": "LucideSkull"
+    },
+    {
+      "value": "Spectral",
+      "description": "Non-Material ",
+      "icon": "LucideRadio"
+    },
+    {
+      "value": "Synthetic",
+      "description": "Robot-Like Composition",
+      "icon": "Factory"
     }
   ],
   "sources": [
@@ -459,6 +519,16 @@
       "value": "Spiritual",
       "description": "Spiritual Connection",
       "icon": "Ghost"
+    },
+    {
+      "value": "Dark",
+      "description": "Darkness / General Evil Power",
+      "icon": "LucideSkull"
+    },
+    {
+      "value": "Cosmic",
+      "description": "Cosmic Energy",
+      "icon": "LucideOrbit"
     }
   ],
   "elements": [
@@ -546,6 +616,36 @@
       "value": "Energy",
       "description": "Spiritual Control",
       "icon": "LucideTarget"
+    },
+    {
+      "value": "Poison",
+      "description": "Manipulation of Hazard Substances",
+      "icon": "LucideSkull"
+    },
+    {
+      "value": "Mind",
+      "description": "Mind Control / Will Manipulation",
+      "icon": "Brain"
+    },
+    {
+      "value": "Time",
+      "description": "Manipulation of Time",
+      "icon": "Hourglass"
+    },
+    {
+      "value": "Matter",
+      "description": "Matter Manipulation",
+      "icon": "CircleDot"
+    },
+    {
+      "value": "Magnetic",
+      "description": "Generate Magnetic Fields",
+      "icon": "LucideMagnet"
+    },
+    {
+      "value": "Shadow",
+      "description": "Shadow Manipulation / Affinity",
+      "icon": "Crosshair"
     }
   ],
   "arenaDaytimes": [

@@ -3,42 +3,38 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Character, Group } from '@/types'
-import { Plus, Search, Filter, Edit2, Trash2 } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 
 export default function FightersPage() {
-  const [characters, setCharacters] = useState<Character[]>([])
+  const [recentCharacters, setRecentCharacters] = useState<Character[]>([])
   const [groups, setGroups] = useState<Group[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
-  const [search, setSearch] = useState('')
-  const [selectedGroup, setSelectedGroup] = useState('')
+  const [isPaging, setIsPaging] = useState(false)
   const [page, setPage] = useState(0)
   const [hasMore, setHasMore] = useState(true)
   const [backfilledIds, setBackfilledIds] = useState<Set<string>>(new Set())
-  const [currentPage, setCurrentPage] = useState(1)
 
-  const PAGE_SIZE = 50
-  const UI_PAGE_SIZE = 21
+  const PAGE_SIZE = 7
 
   useEffect(() => {
     const loadInitial = async () => {
       try {
         setIsLoading(true)
         const [charsRes, groupsRes] = await Promise.all([
-          fetch(`/api/characters?limit=${PAGE_SIZE}&offset=0`),
+          fetch(`/api/characters?limit=${PAGE_SIZE}&offset=0&mode=list`),
           fetch('/api/groups')
         ])
 
         const charsData = await charsRes.json()
         const groupsData = await groupsRes.json()
 
-        setCharacters(Array.isArray(charsData) ? charsData : [])
+        setRecentCharacters(Array.isArray(charsData) ? charsData : [])
         setGroups(Array.isArray(groupsData) ? groupsData : [])
         setHasMore(Array.isArray(charsData) && charsData.length === PAGE_SIZE)
-        setPage(1)
+        setPage(0)
       } catch (error) {
         console.error('Failed to load fighters or groups', error)
-        setCharacters([])
+        setRecentCharacters([])
         setGroups([])
         setHasMore(false)
       } finally {
@@ -49,26 +45,24 @@ export default function FightersPage() {
     loadInitial()
   }, [])
 
-  const loadMore = async () => {
-    if (isLoadingMore || !hasMore) return
+  const loadPage = async (targetPage: number) => {
+    if (targetPage < 0) return
+    if (isPaging) return
 
     try {
-      setIsLoadingMore(true)
-      const offset = page * PAGE_SIZE
-      const res = await fetch(`/api/characters?limit=${PAGE_SIZE}&offset=${offset}`)
+      setIsPaging(true)
+      const offset = targetPage * PAGE_SIZE
+      const res = await fetch(`/api/characters?limit=${PAGE_SIZE}&offset=${offset}&mode=list`)
       const data = await res.json()
+      const list = Array.isArray(data) ? data : []
 
-      if (Array.isArray(data) && data.length > 0) {
-        setCharacters(prev => [...prev, ...data])
-        setHasMore(data.length === PAGE_SIZE)
-        setPage(prev => prev + 1)
-      } else {
-        setHasMore(false)
-      }
+      setRecentCharacters(list)
+      setHasMore(list.length === PAGE_SIZE)
+      setPage(targetPage)
     } catch (error) {
-      console.error('Failed to load more fighters', error)
+      console.error('Failed to load fighters page', error)
     } finally {
-      setIsLoadingMore(false)
+      setIsPaging(false)
     }
   }
 
@@ -100,7 +94,7 @@ export default function FightersPage() {
 
     const backfill = async () => {
       if (isLoading) return
-      const candidates = characters.filter(c => {
+      const candidates = recentCharacters.filter(c => {
         const s = c.stages?.[0]
         return s && !s.thumbnail && s.image && !backfilledIds.has(c.id)
       }).slice(0, 10)
@@ -118,7 +112,7 @@ export default function FightersPage() {
             })
           })
           if (res.ok) {
-            setCharacters(prev => prev.map(x => x.id === c.id ? ({ ...x, stages: [{ ...s0, thumbnail: thumb }, ...c.stages.slice(1)] }) : x))
+            setRecentCharacters(prev => prev.map(x => x.id === c.id ? ({ ...x, stages: [{ ...s0, thumbnail: thumb }, ...c.stages.slice(1)] }) : x))
             setBackfilledIds(prev => new Set(prev).add(c.id))
           }
         } catch {}
@@ -126,19 +120,7 @@ export default function FightersPage() {
     }
 
     backfill()
-  }, [isLoading, characters])
-
-  const filteredCharacters = characters.filter(char => {
-    const matchesSearch = char.name.toLowerCase().includes(search.toLowerCase())
-    const matchesGroup = selectedGroup ? char.groupId === selectedGroup : true
-    return matchesSearch && matchesGroup
-  })
-
-  const totalPages = Math.max(1, Math.ceil(filteredCharacters.length / UI_PAGE_SIZE))
-  const safePage = Math.min(currentPage, totalPages)
-  const startIndex = (safePage - 1) * UI_PAGE_SIZE
-  const endIndex = startIndex + UI_PAGE_SIZE
-  const paginatedCharacters = filteredCharacters.slice(startIndex, endIndex)
+  }, [isLoading, recentCharacters])
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.preventDefault()
@@ -149,7 +131,7 @@ export default function FightersPage() {
     try {
       const res = await fetch(`/api/characters?id=${id}`, { method: 'DELETE' })
       if (res.ok) {
-        setCharacters(prev => prev.filter(c => c.id !== id))
+        setRecentCharacters(prev => prev.filter(c => c.id !== id))
       } else {
         alert('Failed to delete fighter')
       }
@@ -157,10 +139,6 @@ export default function FightersPage() {
       console.error('Failed to delete fighter', error)
     }
   }
-
-  React.useEffect(() => {
-    setCurrentPage(1)
-  }, [search, selectedGroup])
 
   // Rank Helpers (Duplicated to avoid complex imports if not shared)
   const calculateRank = (total: number) => {
@@ -204,150 +182,98 @@ export default function FightersPage() {
         </Link>
       </div>
 
-      {/* Filters */}
-      <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 flex flex-col md:flex-row gap-4 mb-8">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-          <input
-            type="text"
-            placeholder="Search fighter..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-10 pr-4 py-2 text-white focus:border-orange-500 outline-none transition-colors placeholder-zinc-600"
-          />
-        </div>
-        <div className="w-full md:w-64 relative">
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-          <select
-            value={selectedGroup}
-            onChange={(e) => setSelectedGroup(e.target.value)}
-            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-10 pr-4 py-2 text-white focus:border-orange-500 outline-none transition-colors appearance-none"
-          >
-            <option value="">All Groups</option>
-            {groups.map(g => (
-              <option key={g.id} value={g.id}>{g.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Grid */}
-      {isLoading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-        </div>
-      ) : (
-        <>
-        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3">
-          {paginatedCharacters.map(char => {
-            const groupName = groups.find(g => g.id === char.groupId)?.name || 'Unknown'
-            
-            // Find strongest stage for display
-            const strongestStage = char.stages.reduce((prev, current) => {
-                const prevTotal = Object.values(prev.stats).reduce((a, b) => (typeof b === 'number' ? a + b : a), 0) as number
-                const currTotal = Object.values(current.stats).reduce((a, b) => (typeof b === 'number' ? a + b : a), 0) as number
-                return currTotal > prevTotal ? current : prev
-            }, char.stages[0])
-
-            const mainImage = strongestStage?.thumbnail || strongestStage?.image || char.stages[0]?.thumbnail || char.stages[0]?.image
-            
-            // Calculate Rank
-            const totalStats = Object.values(strongestStage.stats).reduce((sum, val) => 
-                typeof val === 'number' ? sum + val : sum, 0) as number
-            const rank = calculateRank(totalStats)
-            const rankColor = getRankColor(rank)
-
-            return (
-              <Link key={char.id} href={`/admin/characters/${char.id}`} className="block h-full">
-              <div className="bg-zinc-900/30 rounded-xl border border-zinc-800 overflow-hidden group hover:border-orange-500/50 transition-all hover:shadow-xl hover:shadow-orange-900/10 flex flex-col h-full cursor-pointer relative">
-                
-                {/* Delete Button */}
-                <button 
-                  onClick={(e) => handleDelete(e, char.id)}
-                  className="absolute top-2 right-2 z-20 bg-black/60 hover:bg-red-600 p-2 rounded-lg backdrop-blur-sm border border-white/10 text-white transition-all opacity-0 group-hover:opacity-100 transform translate-y-[-10px] group-hover:translate-y-0"
-                >
-                  <Trash2 size={16} />
-                </button>
-                
-                <div className="aspect-square bg-zinc-950 relative overflow-hidden">
-                  {mainImage ? (
-                    <img src={mainImage} alt={char.name} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-zinc-700">No Image</div>
-                  )}
-                  
-                  {/* Overlay Gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
-
-                  <div className="absolute bottom-0 left-0 w-full p-2">
-                    <h3 className="text-sm font-bold text-white leading-tight group-hover:text-orange-400 transition-colors truncate">{char.name}</h3>
-                    <p className="text-zinc-400 text-[9px] font-medium uppercase tracking-wider mt-0.5 truncate">{groupName}</p>
-                  </div>
-                </div>
-                
-                <div className="p-2 bg-zinc-900/50 border-t border-zinc-800 grid grid-cols-2 gap-1 text-[9px]">
-                  <div className="bg-zinc-950/50 p-1 rounded text-center border border-zinc-800/50">
-                    <span className="block text-zinc-500 uppercase text-[9px] tracking-wider mb-0.5">Race</span>
-                    <span className="text-zinc-300 font-medium truncate px-1">{char.specs.race}</span>
-                  </div>
-                  <div className="bg-zinc-950/50 p-1 rounded text-center border border-zinc-800/50">
-                    <span className="block text-zinc-500 uppercase text-[9px] tracking-wider mb-0.5">Modes</span>
-                    <span className="text-zinc-300 font-medium">{char.stages.length} Forms</span>
-                  </div>
-                  <div className="bg-zinc-950/50 p-1 rounded text-center border border-zinc-800/50">
-                    <span className="block text-zinc-500 uppercase text-[9px] tracking-wider mb-0.5">Power</span>
-                    <span className="text-orange-400 font-bold">{totalStats}</span>
-                  </div>
-                  <div className="bg-zinc-950/50 p-1 rounded text-center border border-zinc-800/50 relative overflow-hidden">
-                    <span className="block text-zinc-500 uppercase text-[9px] tracking-wider mb-0.5">Rank</span>
-                    <span className="font-black text-sm relative z-10" style={{ color: rankColor }}>{rank}</span>
-                    <div className="absolute inset-0 opacity-10" style={{ backgroundColor: rankColor }}></div>
-                  </div>
-                </div>
-              </div>
-              </Link>
-            )
-          })}
-        </div>
-        {filteredCharacters.length > 0 && (
-          <div className="flex items-center justify-between mt-4 text-xs text-zinc-400">
-            <span>
-              Showing {startIndex + 1}-{Math.min(endIndex, filteredCharacters.length)} of {filteredCharacters.length}
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={safePage === 1}
-                className="px-3 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-[11px] font-bold text-zinc-300 hover:border-orange-500 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Previous
-              </button>
-              <span className="text-zinc-500">
-                Page {safePage} / {totalPages}
-              </span>
-              <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={safePage === totalPages}
-                className="px-3 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-[11px] font-bold text-zinc-300 hover:border-orange-500 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
-        {hasMore && (
-          <div className="flex justify-center mt-8">
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-bold tracking-wider uppercase text-zinc-400">Last Modified</h2>
+          <div className="flex items-center gap-2">
             <button
-              onClick={loadMore}
-              disabled={isLoadingMore}
-              className="px-4 py-2 rounded-lg bg-zinc-900 border border-zinc-700 text-sm font-bold text-zinc-200 hover:border-orange-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              onClick={() => loadPage(Math.max(0, page - 1))}
+              disabled={isPaging || page === 0}
+              className="px-3 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-[11px] font-bold text-zinc-300 hover:border-orange-500 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              {isLoadingMore ? 'Loading more...' : 'Load more fighters'}
+              Previous
+            </button>
+            <button
+              onClick={() => loadPage(page + 1)}
+              disabled={isPaging || !hasMore}
+              className="px-3 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-[11px] font-bold text-zinc-300 hover:border-orange-500 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
             </button>
           </div>
+        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-24">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3">
+            {recentCharacters.map(char => {
+              const groupName = groups.find(g => g.id === char.groupId)?.name || 'Unknown'
+              const firstStage = char.stages[0]
+              const mainImage = firstStage?.thumbnail || firstStage?.image || ''
+              const totalStats = Object.values(firstStage?.stats || {}).reduce((sum, val) => 
+                typeof val === 'number' ? sum + val : sum, 0) as number
+              const rank = calculateRank(totalStats)
+              const rankColor = getRankColor(rank)
+              return (
+                <Link key={char.id} href={`/admin/characters/${char.id}`} className="block h-full">
+                  <div className="bg-zinc-900/30 rounded-xl border border-zinc-800 overflow-hidden group hover:border-orange-500/50 transition-all hover:shadow-xl hover:shadow-orange-900/10 flex flex-col h-full cursor-pointer relative">
+                    <button 
+                      onClick={(e) => handleDelete(e, char.id)}
+                      className="absolute top-2 right-2 z-20 bg-black/60 hover:bg-red-600 p-2 rounded-lg backdrop-blur-sm border border-white/10 text-white transition-all opacity-0 group-hover:opacity-100 transform translate-y-[-10px] group-hover:translate-y-0"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                    <div className="aspect-square bg-zinc-950 relative overflow-hidden">
+                      {mainImage ? (
+                        <img src={mainImage} alt={char.name} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-700">No Image</div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+                      <div className="absolute bottom-0 left-0 w-full p-2">
+                        <h3 className="text-sm font-bold text-white leading-tight group-hover:text-orange-400 transition-colors truncate">{char.name}</h3>
+                        <p className="text-zinc-400 text-[9px] font-medium uppercase tracking-wider mt-0.5 truncate">{groupName}</p>
+                      </div>
+                    </div>
+                    <div className="p-2 bg-zinc-900/50 border-t border-zinc-800 grid grid-cols-2 gap-1 text-[9px]">
+                      <div className="bg-zinc-950/50 p-1 rounded text-center border border-zinc-800/50">
+                        <span className="block text-zinc-500 uppercase text-[9px] tracking-wider mb-0.5">Power</span>
+                        <span className="text-orange-400 font-bold">{totalStats}</span>
+                      </div>
+                      <div className="bg-zinc-950/50 p-1 rounded text-center border border-zinc-800/50 relative overflow-hidden">
+                        <span className="block text-zinc-500 uppercase text-[9px] tracking-wider mb-0.5">Rank</span>
+                        <span className="font-black text-sm relative z-10" style={{ color: rankColor }}>{rank}</span>
+                        <div className="absolute inset-0 opacity-10" style={{ backgroundColor: rankColor }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
         )}
-        </>
-      )}
+      </div>
+
+      <div className="mt-10">
+        <h2 className="text-sm font-bold tracking-wider uppercase text-zinc-400 mb-3">Groups</h2>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-24">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+            {groups.map(g => (
+              <Link key={g.id} href={`/admin/fighters/group/${g.id}`} className="block">
+                <div className="bg-zinc-900/30 rounded-xl border border-zinc-800 hover:border-orange-500/50 transition-all p-4 h-[120px] flex items-center justify-center">
+                  <span className="text-zinc-300 font-bold uppercase tracking-wider">{g.name}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

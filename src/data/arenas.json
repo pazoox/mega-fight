@@ -17,5 +17,99 @@
       "complexity": 50
     },
     "id": "thundercloud-crag"
+  },
+  {
+    "name": "Lava Plains",
+    "description": "Burned Place",
+    "image": "",
+    "video": "https://gzffvlbocixlqwbnpint.supabase.co/storage/v1/object/public/backgrounds/arenas/1771388943005-670637445-152085-802335503_small.mp4",
+    "folder": "Rotation",
+    "daytime": "Day",
+    "weather": "Sunny",
+    "environment": [
+      "Volcanic"
+    ],
+    "difficulty": {
+      "space": 50,
+      "magic": 50,
+      "complexity": 50
+    },
+    "id": "lava-plains"
+  },
+  {
+    "name": "RetroCity",
+    "description": "",
+    "image": "",
+    "video": "https://gzffvlbocixlqwbnpint.supabase.co/storage/v1/object/public/backgrounds/arenas/1771389104412-167788416-134917-760686103.mp4",
+    "folder": "Rotation",
+    "daytime": "Dusk",
+    "weather": "Sunny",
+    "environment": [
+      "Neutral",
+      "City"
+    ],
+    "difficulty": {
+      "space": 50,
+      "magic": 50,
+      "complexity": 50
+    },
+    "id": "retrocity"
+  },
+  {
+    "name": "Blizzard Woods",
+    "description": "",
+    "image": "",
+    "video": "https://gzffvlbocixlqwbnpint.supabase.co/storage/v1/object/public/backgrounds/arenas/1771389208931-761366480-134117-758552437.mp4",
+    "folder": "Rotation",
+    "daytime": "Neutral",
+    "weather": "Snowy",
+    "environment": [
+      "Forest",
+      "Neutral"
+    ],
+    "difficulty": {
+      "space": 50,
+      "magic": 50,
+      "complexity": 50
+    },
+    "id": "blizzard-woods"
+  },
+  {
+    "name": "Al' Kanzbah",
+    "description": "",
+    "image": "",
+    "video": "https://gzffvlbocixlqwbnpint.supabase.co/storage/v1/object/public/backgrounds/arenas/1771389412373-100888126-323642_small.mp4",
+    "folder": "Rotation",
+    "daytime": "Dusk",
+    "weather": "Windy",
+    "environment": [
+      "Desert",
+      "Ruins"
+    ],
+    "difficulty": {
+      "space": 50,
+      "magic": 50,
+      "complexity": 50
+    },
+    "id": "al'-kanzbah"
+  },
+  {
+    "name": "Collide Temple",
+    "description": "",
+    "image": "",
+    "video": "https://gzffvlbocixlqwbnpint.supabase.co/storage/v1/object/public/backgrounds/arenas/1771389491112-400452225-203559-921629697_small.mp4",
+    "folder": "Rotation",
+    "daytime": "Neutral",
+    "weather": "Neutral",
+    "environment": [
+      "Cage",
+      "Ruins"
+    ],
+    "difficulty": {
+      "space": 50,
+      "magic": 50,
+      "complexity": 50
+    },
+    "id": "collide-temple"
   }
 ]

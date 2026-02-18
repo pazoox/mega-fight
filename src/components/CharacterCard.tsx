@@ -458,7 +458,8 @@ export function CharacterCard({ character, stageIndex = 0, isWinner, onClick, di
             width: "100%", 
             height: "100%", 
             transformStyle: "preserve-3d",
-            position: "relative" 
+            position: "relative",
+            willChange: "transform"
           }}
           initial={false}
           animate={{ rotateY: isFlipped ? 180 : 0 }}
@@ -503,6 +504,9 @@ export function CharacterCard({ character, stageIndex = 0, isWinner, onClick, di
             {(!character.cardLayout || character.cardLayout === 'classic') && (
               <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/80 via-black/20 to-black/95" />
             )}
+            {character.cardLayout === 'bottom_focused' && (
+              <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+            )}
           </div>
 
           {/* Content Layer */}
@@ -517,39 +521,39 @@ export function CharacterCard({ character, stageIndex = 0, isWinner, onClick, di
             }}
           >
             
-            {/* Header Info - Conditional Rendering */}
+            {/* Header Info - Conditional Rendering (Classic Layout) */}
             {(!character.cardLayout || character.cardLayout === 'classic') && (
-                <div style={{ transform: "translateZ(60px)" }}> 
-                  <h2 className="text-4xl font-black text-white uppercase tracking-tighter drop-shadow-lg leading-none mb-1" style={{ textShadow: "0 10px 30px rgba(0,0,0,0.8)" }}>
-                    {stageName}
-                  </h2>
+              <div style={{ transform: "translateZ(60px)" }}> 
+                <h2 className="text-4xl font-black text-white uppercase tracking-tighter leading-none mb-1">
+                  {stageName}
+                </h2>
+                
+                {/* Alias */}
+                {stageAlias && (
+                  <div className="text-sm text-zinc-300 font-medium tracking-wide mb-3">
+                    {stageAlias}
+                  </div>
+                )}
+
+                {/* Details Line: [Race] [Main Combat Class] [Mode/Form] */}
+                <div className="flex items-center gap-2 text-xs font-bold text-white/90 uppercase tracking-wider flex-wrap">
+                  <span className="text-zinc-200">{stageRace}</span>
                   
-                  {/* Alias */}
-                  {stageAlias && (
-                    <div className="text-sm text-zinc-300 font-medium tracking-wide mb-3 drop-shadow-md">
-                      {stageAlias}
-                    </div>
+                  {primaryClass && (
+                    <>
+                      <span className="text-zinc-500">|</span>
+                      <span className="text-blue-300">{primaryClass}</span>
+                    </>
                   )}
 
-                  {/* Details Line: [Race] [Main Combat Class] [Mode/Form] */}
-                  <div className="flex items-center gap-2 text-xs font-bold text-white/90 uppercase tracking-wider drop-shadow-md flex-wrap">
-                    <span className="text-zinc-200">{stageRace}</span>
-                    
-                    {primaryClass && (
-                      <>
-                        <span className="text-zinc-500">|</span>
-                        <span className="text-blue-300 drop-shadow-md">{primaryClass}</span>
-                      </>
-                    )}
-
-                    {stage.stage && (
-                      <>
-                        <span className="text-zinc-500">|</span>
-                        <span className="text-orange-300 drop-shadow-md">{stage.stage}</span>
-                      </>
-                    )}
-                  </div>
+                  {stage.stage && (
+                    <>
+                      <span className="text-zinc-500">|</span>
+                      <span className="text-orange-300">{stage.stage}</span>
+                    </>
+                  )}
                 </div>
+              </div>
             )}
             
             {/* Spacer for Bottom Focused Layout */}

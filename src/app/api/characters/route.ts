@@ -57,10 +57,6 @@ const mapToDb = (char: Partial<Character>, groupUuid?: string | null) => {
 
 export async function GET(request: Request) {
   try {
-    if (!supabaseAdmin) {
-        throw new Error('Supabase client not initialized');
-    }
-
     const { searchParams } = new URL(request.url);
     const limitParam = searchParams.get('limit');
     const offsetParam = searchParams.get('offset');
@@ -77,6 +73,41 @@ export async function GET(request: Request) {
 
     const hasFilter = Boolean(id || groupId);
 
+    // Fallback path if Supabase is not configured
+    if (!supabaseAdmin) {
+      try {
+        const charJson = await fs.readFile(DATA_FILE_PATH, 'utf-8');
+        let localCharacters: Character[] = JSON.parse(charJson);
+        if (onlyActive) {
+          localCharacters = localCharacters.filter(c => c.isActive);
+        }
+        // Lightweight mode (list)
+        if (mode === 'list') {
+          const light = (localCharacters || []).map((c: Character) => {
+            const firstStage = Array.isArray(c.stages) && c.stages.length > 0 ? c.stages[0] : null;
+            return {
+              id: c.id,
+              name: c.name,
+              groupId: c.groupId,
+              stages: firstStage ? [{
+                stage: firstStage.stage || 'Base',
+                image: firstStage.image || '',
+                thumbnail: firstStage.thumbnail || '',
+                stats: firstStage.stats || { hp: 0, str: 0, def: 0, sta: 0, sp_atk: 0, int: 0, spd: 0, atk_spd: 0 },
+                combat: firstStage.combat || { mainSkill: { name: '', description: '', tags: [] } },
+                tags: firstStage.tags || { combatClass: [], movement: [], composition: 'Organic', size: 'Medium', source: [], element: [] }
+              }] : []
+            };
+          });
+          return NextResponse.json(light);
+        }
+        return NextResponse.json(localCharacters);
+      } catch (fileError) {
+        console.warn('Local characters fallback missing; returning empty list:', fileError);
+        return NextResponse.json([]);
+      }
+    }
+
     const baseSelect = mode === 'list'
       ? 'id,name,group_id,stages,is_active,card_layout'
       : '*';
@@ -84,7 +115,7 @@ export async function GET(request: Request) {
     let query = supabaseAdmin
       .from('characters')
       .select(baseSelect)
-      .order('created_at', { ascending: false });
+      .order('updated_at', { ascending: false });
 
     if (id) {
       query = query.eq('id', id);
@@ -109,15 +140,18 @@ export async function GET(request: Request) {
     const { data: dbCharacters, error } = await query;
 
     if (error) {
-        console.error('Supabase fetch error:', error);
-        try {
-            const charJson = await fs.readFile(DATA_FILE_PATH, 'utf-8');
-            const localCharacters: Character[] = JSON.parse(charJson);
-            return NextResponse.json(localCharacters.map(mapToCharacter));
-        } catch (fileError) {
-            console.warn('Local characters fallback failed:', fileError);
-            return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      console.error('Supabase fetch error:', error);
+      try {
+        const charJson = await fs.readFile(DATA_FILE_PATH, 'utf-8');
+        let localCharacters: Character[] = JSON.parse(charJson);
+        if (onlyActive) {
+          localCharacters = localCharacters.filter(c => c.isActive);
         }
+        return NextResponse.json(localCharacters);
+      } catch (fileError) {
+        console.warn('Local characters fallback failed; returning empty list:', fileError);
+        return NextResponse.json([]);
+      }
     }
 
     // 2. Fetch Groups (needed for migration/fixing)
@@ -256,7 +290,7 @@ export async function PUT(request: Request) {
 
     const { data, error } = await supabaseAdmin
         .from('characters')
-        .update(mapToDb(updatedCharacter))
+        .update({ ...mapToDb(updatedCharacter), updated_at: new Date().toISOString() })
         .eq('id', updatedCharacter.id)
         .select()
         .single();

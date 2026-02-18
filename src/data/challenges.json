@@ -8,7 +8,13 @@
       "teamSize": 1,
       "tournamentType": "last_standing",
       "arenaPool": [
-        "zephyr-peaks-plateau"
+        "zephyr-peaks-plateau",
+        "thundercloud-crag",
+        "lava-plains",
+        "retrocity",
+        "blizzard-woods",
+        "al'-kanzbah",
+        "collide-temple"
       ],
       "powerScale": false,
       "teamA": {

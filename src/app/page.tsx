@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { CharacterCard } from '@/components/CharacterCard'
 import { Navbar } from '@/components/Navbar'
 import { Swords, Trophy, Users, Zap, ArrowRight, Shield } from 'lucide-react'
+import { VsBadge } from '@/app/fight/solo/components'
 
 import { Character } from '@/types'
 
@@ -93,9 +94,7 @@ export default function LandingPage() {
 
           {/* VS Badge */}
           <div className="flex flex-col items-center justify-center">
-            <div className="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-zinc-600 italic drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] animate-pulse">
-              VS
-            </div>
+            <VsBadge compact />
           </div>
 
           {/* Player 2 */}

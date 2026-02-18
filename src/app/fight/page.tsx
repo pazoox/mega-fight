@@ -73,7 +73,7 @@ export default function FightSetupPage() {
   // -- Group Settings --
   const [groupMode, setGroupMode] = useState<'all' | 'select'>('all')
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]) // IDs
-  const [stageSelectionMode, setStageSelectionMode] = useState<'random' | 'weakest' | 'strongest'>('random')
+  const [stageSelectionMode, setStageSelectionMode] = useState<'random' | 'unique' | 'weakest' | 'strongest'>('random')
   const [excludedFighters, setExcludedFighters] = useState<string[]>([]) // IDs of fighters explicitly deselected
   const [battleLimit, setBattleLimit] = useState<string>('all')
   const [isLimitDropdownOpen, setIsLimitDropdownOpen] = useState(false)
@@ -183,6 +183,13 @@ export default function FightSetupPage() {
 
   const maxMatches = calculateMatches(maxBracketSize);
 
+  const canConfigureMatchLimit = useMemo(() => {
+    if (tournamentType === 'bracket') {
+      return maxBracketSize >= 4;
+    }
+    return filteredCharacters.length >= 2;
+  }, [tournamentType, maxBracketSize, filteredCharacters.length]);
+
 
   // -- Modals --
   const [showArenaModal, setShowArenaModal] = useState(false)
@@ -194,16 +201,28 @@ export default function FightSetupPage() {
 
   // Fetch Data
   useEffect(() => {
-    Promise.all([
-      fetch('/api/arenas').then(res => res.json()),
-      fetch('/api/groups').then(res => res.json()),
-      fetch('/api/characters?onlyActive=true').then(res => res.json())
-    ]).then(([arenasData, groupsData, charsData]) => {
-      setAvailableArenas(arenasData)
-      setAvailableGroups(groupsData)
-      setAvailableCharacters(charsData)
-      setLoading(false)
-    })
+    const run = async () => {
+      try {
+        const [arenasData, groupsData, charsData] = await Promise.all([
+          fetch('/api/catalog/arenas?onlyActive=true').then(res => res.json()),
+          fetch('/api/catalog/groups?onlyActive=true').then(res => res.json()),
+          fetch('/api/catalog/characters?onlyActive=true').then(res => res.json())
+        ])
+
+        setAvailableArenas(Array.isArray(arenasData) ? arenasData : [])
+        setAvailableGroups(Array.isArray(groupsData) ? groupsData : [])
+        setAvailableCharacters(Array.isArray(charsData) ? charsData : [])
+      } catch (error) {
+        console.error('Failed to load catalog data for fight setup', error)
+        setAvailableArenas([])
+        setAvailableGroups([])
+        setAvailableCharacters([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    run()
   }, [])
 
   const handleStart = async () => {
@@ -539,6 +558,17 @@ export default function FightSetupPage() {
                   </div>
 
                   <div 
+                    onClick={() => setStageSelectionMode('unique')}
+                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${stageSelectionMode === 'unique' ? 'bg-orange-900/20 border-orange-500 text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'}`}
+                  >
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${stageSelectionMode === 'unique' ? 'border-orange-500' : 'border-zinc-600'}`}>
+                      {stageSelectionMode === 'unique' && <div className="w-2 h-2 rounded-full bg-orange-500" />}
+                    </div>
+                    <span className="font-bold">Unique</span>
+                    <span className="text-xs text-zinc-500 ml-auto">Random once, fixed</span>
+                  </div>
+
+                  <div 
                     onClick={() => setStageSelectionMode('weakest')}
                     className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${stageSelectionMode === 'weakest' ? 'bg-orange-900/20 border-orange-500 text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'}`}
                   >
@@ -600,100 +630,115 @@ export default function FightSetupPage() {
                 </div>
               </section>
               
-              {/* Match Limit */}
               <section className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 hover:border-orange-500/30 transition-colors">
                 <h3 className="text-zinc-400 font-bold uppercase tracking-wider text-sm mb-4 flex items-center gap-2">
                   <Layers size={16} /> Match Limit
                 </h3>
                 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="text-zinc-400 text-sm font-mono">
-                      {(() => {
-                        if (battleLimit === 'all') {
-                          if (tournamentType === 'bracket') {
-                             const steps = [4, 8, 16, 32, 64, 128].filter(n => n <= maxBracketSize);
-                             if (steps.length === 0) return '0 Matches';
-                             const p = steps[steps.length - 1];
-                             return `${p - 1 + (thirdPlace && p >= 4 ? 1 : 0)} Matches`;
-                          }
-                          return `${filteredCharacters.length - 1} Matches`;
-                        } else {
-                          const p = Number(battleLimit);
-                          if (tournamentType === 'bracket') {
-                             return `${p - 1 + (thirdPlace && p >= 4 ? 1 : 0)} Matches`;
-                          }
-                          return `${p - 1} Matches`;
-                        }
-                      })()}
-                    </div>
-                    <div className="text-xs font-bold text-orange-500 bg-orange-900/20 px-2 py-0.5 rounded border border-orange-500/30">
-                      {battleLimit === 'all' 
-                        ? 'MAX' 
-                        : `${battleLimit} Fighters`
-                      }
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-zinc-500">Small</span>
-                    <input 
-                       type="range"
-                       min="0"
-                       max={(() => {
-                          if (tournamentType === 'bracket') {
-                             const steps = [4, 8, 16, 32, 64, 128].filter(n => n <= maxBracketSize);
-                             return steps.length > 1 ? steps.length - 1 : 1;
-                          } else {
-                             const maxVal = filteredCharacters.length - 2;
-                             return maxVal > 0 ? maxVal : 1;
-                          }
-                       })()}
-                       step="1"
-                       value={(() => {
+                {canConfigureMatchLimit ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="text-zinc-400 text-sm font-mono">
+                        {(() => {
                           if (battleLimit === 'all') {
-                             if (tournamentType === 'bracket') {
-                                const steps = [4, 8, 16, 32, 64, 128].filter(n => n <= maxBracketSize);
-                                return steps.length > 1 ? steps.length - 1 : 1;
-                             } else {
-                                const maxVal = filteredCharacters.length - 2;
-                                return maxVal > 0 ? maxVal : 1;
-                             }
-                          }
-                          
-                          if (tournamentType === 'bracket') {
-                             const steps = [4, 8, 16, 32, 64, 128].filter(n => n <= maxBracketSize);
-                             if (steps.length <= 1) return 1;
-                             return steps.indexOf(Number(battleLimit));
+                            if (tournamentType === 'bracket') {
+                               const steps = [4, 8, 16, 32, 64, 128].filter(n => n <= maxBracketSize);
+                               if (steps.length === 0) return '0 Matches';
+                               const p = steps[steps.length - 1];
+                               return `${p - 1 + (thirdPlace && p >= 4 ? 1 : 0)} Matches`;
+                            }
+                            return `${filteredCharacters.length - 1} Matches`;
                           } else {
-                             const maxVal = filteredCharacters.length - 2;
-                             if (maxVal <= 0) return 1;
-                             return Number(battleLimit) - 2;
+                            const p = Number(battleLimit);
+                            if (tournamentType === 'bracket') {
+                               return `${p - 1 + (thirdPlace && p >= 4 ? 1 : 0)} Matches`;
+                            }
+                            return `${p - 1} Matches`;
                           }
-                       })()}
-                       onChange={(e) => {
-                          const val = Number(e.target.value);
-                          if (tournamentType === 'bracket') {
-                             const steps = [4, 8, 16, 32, 64, 128].filter(n => n <= maxBracketSize);
-                             if (steps.length <= 1) {
-                                if (steps.length > 0) setBattleLimit(String(steps[0]));
-                             } else {
-                                setBattleLimit(String(steps[val]));
-                             }
-                          } else {
-                             const maxVal = filteredCharacters.length - 2;
-                             if (maxVal <= 0) {
-                                setBattleLimit(String(2));
-                             } else {
-                                setBattleLimit(String(val + 2));
-                             }
-                          }
-                       }}
-                       className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                    />
-                    <span className="text-xs text-zinc-500">Large</span>
+                        })()}
+                      </div>
+                      <div className="text-xs font-bold text-orange-500 bg-orange-900/20 px-2 py-0.5 rounded border border-orange-500/30">
+                        {battleLimit === 'all' 
+                          ? 'MAX' 
+                          : `${battleLimit} Fighters`
+                        }
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-zinc-500">Small</span>
+                      <input 
+                         type="range"
+                         min="0"
+                         max={(() => {
+                            if (tournamentType === 'bracket') {
+                               const steps = [4, 8, 16, 32, 64, 128].filter(n => n <= maxBracketSize);
+                               return steps.length > 1 ? steps.length - 1 : 1;
+                            } else {
+                               const maxVal = filteredCharacters.length - 2;
+                               return maxVal > 0 ? maxVal : 1;
+                            }
+                         })()}
+                         step="1"
+                         value={(() => {
+                            if (battleLimit === 'all') {
+                               if (tournamentType === 'bracket') {
+                                  const steps = [4, 8, 16, 32, 64, 128].filter(n => n <= maxBracketSize);
+                                  return steps.length > 1 ? steps.length - 1 : 1;
+                               } else {
+                                  const maxVal = filteredCharacters.length - 2;
+                                  return maxVal > 0 ? maxVal : 1;
+                               }
+                            }
+                            
+                            if (tournamentType === 'bracket') {
+                               const steps = [4, 8, 16, 32, 64, 128].filter(n => n <= maxBracketSize);
+                               if (steps.length <= 1) return 1;
+                               return steps.indexOf(Number(battleLimit));
+                            } else {
+                               const maxVal = filteredCharacters.length - 2;
+                               if (maxVal <= 0) return 1;
+                               return Number(battleLimit) - 2;
+                            }
+                         })()}
+                         onChange={(e) => {
+                            const val = Number(e.target.value);
+                            if (tournamentType === 'bracket') {
+                               const steps = [4, 8, 16, 32, 64, 128].filter(n => n <= maxBracketSize);
+                               if (steps.length <= 1) {
+                                  if (steps.length > 0) setBattleLimit(String(steps[0]));
+                               } else {
+                                  setBattleLimit(String(steps[val]));
+                               }
+                            } else {
+                               const maxVal = filteredCharacters.length - 2;
+                               if (maxVal <= 0) {
+                                  setBattleLimit(String(2));
+                               } else {
+                                  setBattleLimit(String(val + 2));
+                               }
+                            }
+                         }}
+                         className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                      />
+                      <span className="text-xs text-zinc-500">Large</span>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="text-zinc-400 text-sm font-mono">
+                        0 Matches
+                      </div>
+                      <div className="text-xs font-bold text-zinc-500 bg-zinc-900/40 px-2 py-0.5 rounded border border-zinc-700/60">
+                        N/A
+                      </div>
+                    </div>
+                    <p className="text-xs text-zinc-500">
+                      Not enough fighters available to configure match limit.
+                    </p>
+                  </div>
+                )}
               </section>
               
               {/* 3rd Place Match */}

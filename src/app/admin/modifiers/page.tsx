@@ -515,7 +515,7 @@ export default function ModifiersPage() {
     const targetType = newRule.targetGroup === 'Fighter' ? 'Fighter' : newRule.targetCategory
 
     const payload = {
-        relationType: newRule.relationType,
+        name: `rule_${newRule.relationType}_${triggerType}_${newRule.originVariable}_${targetType}_${newRule.targetVariable}`,
         trigger: {
             type: triggerType,
             value: newRule.originVariable
@@ -529,7 +529,9 @@ export default function ModifiersPage() {
             type: newRule.effectType,
             value: Number(newRule.effectValue)
         },
-        description: newRule.description
+        description: newRule.description,
+        active: true,
+        version: 1
     }
 
     try {

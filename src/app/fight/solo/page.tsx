@@ -22,7 +22,7 @@ function generateLastOneStanding(
   characters: Character[],
   teamSize: '1x1' | '2v2' | '3v3' | '4v4',
   limit: number,
-  stageMode: 'random' | 'weakest' | 'strongest',
+  stageMode: 'random' | 'unique' | 'weakest' | 'strongest',
   excludedStages: string[]
 ){
   const size = teamSize === '4v4' ? 4 : teamSize === '3v3' ? 3 : teamSize === '2v2' ? 2 : 1
@@ -250,7 +250,7 @@ function SoloFightContent() {
   const enableThirdPlace = searchParams.get('thirdPlace') !== 'false' // Default to true as per user request
   const limit = searchParams.get('limit')
   const tournamentType = searchParams.get('tournamentType') || 'bracket'
-  const stageSelectionMode = (searchParams.get('stageSelectionMode') as 'random' | 'weakest' | 'strongest') || 'random'
+  const stageSelectionMode = (searchParams.get('stageSelectionMode') as 'random' | 'unique' | 'weakest' | 'strongest') || 'random'
   const excludedStagesStr = searchParams.get('excludedStages') // Keep as string for stable dependency
   const modifiersEnabled = searchParams.get('modifiers') !== 'false' // Default true
 
@@ -259,6 +259,9 @@ function SoloFightContent() {
   const [arenas, setArenas] = useState<Arena[]>([])
   const [challenge, setChallenge] = useState<Challenge | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadingStep, setLoadingStep] = useState(0)
+  const [loadingTarget, setLoadingTarget] = useState(0)
+  const [loadingProgress, setLoadingProgress] = useState(0)
   const [statsUpdated, setStatsUpdated] = useState(false)
 
   // -- Shared Motion Values for 2v2 Teams --
@@ -347,6 +350,7 @@ function SoloFightContent() {
 
   // Calculate Active Modifiers and Max Stats for UI Scaling
   // MOVED UP: To avoid "Rendered more hooks than during the previous render" error
+  const uniqueStageMapRef = React.useRef<Map<string, number>>(new Map());
   const { activeModifiers, maxStatValue, p1BattleStats, p2BattleStats, p1Modifiers, p2Modifiers, modifiersMap, maxSimulationValue, stageIndexMap } = React.useMemo(() => {
     if (!p1Team || !p2Team) return { activeModifiers: [], maxStatValue: 1000, p1BattleStats: null, p2BattleStats: null, p1Modifiers: undefined, p2Modifiers: undefined, modifiersMap: new Map(), maxSimulationValue: 2000, stageIndexMap: new Map<string, number>() }
 
@@ -362,13 +366,22 @@ function SoloFightContent() {
        const total = (s: any) => Object.values(s.stats || {}).reduce((a: any, b: any) => (Number(a)||0) + (Number(b)||0), 0) as number;
        let stageIndex = 0;
        if (stageIndices.length > 0) {
-         if (stageSelectionMode === 'weakest') {
-           stageIndex = stageIndices.reduce((minIdx, idx) => total(char.stages[idx]) < total(char.stages[minIdx]) ? idx : minIdx, stageIndices[0]);
-         } else if (stageSelectionMode === 'strongest') {
-           stageIndex = stageIndices.reduce((maxIdx, idx) => total(char.stages[idx]) > total(char.stages[maxIdx]) ? idx : maxIdx, stageIndices[0]);
-         } else {
-           stageIndex = stageIndices[Math.floor(Math.random() * stageIndices.length)];
-         }
+          if (stageSelectionMode === 'weakest') {
+            stageIndex = stageIndices.reduce((minIdx, idx) => total(char.stages[idx]) < total(char.stages[minIdx]) ? idx : minIdx, stageIndices[0]);
+          } else if (stageSelectionMode === 'strongest') {
+            stageIndex = stageIndices.reduce((maxIdx, idx) => total(char.stages[idx]) > total(char.stages[maxIdx]) ? idx : maxIdx, stageIndices[0]);
+          } else if (stageSelectionMode === 'unique') {
+            const map = uniqueStageMapRef.current;
+            const existing = map.get(char.id);
+            if (typeof existing === 'number' && stageIndices.includes(existing)) {
+              stageIndex = existing;
+            } else {
+              stageIndex = stageIndices[Math.floor(Math.random() * stageIndices.length)];
+              map.set(char.id, stageIndex);
+            }
+          } else {
+            stageIndex = stageIndices[Math.floor(Math.random() * stageIndices.length)];
+          }
        }
        return {
           id: char.id,
@@ -559,6 +572,12 @@ function SoloFightContent() {
     return { activeModifiers: modifiersList, maxStatValue: maxVal, p1BattleStats: p1AggStats, p2BattleStats: p2AggStats, p1Modifiers: p1Mods, p2Modifiers: p2Mods, modifiersMap: modMap, maxSimulationValue: maxSimVal, stageIndexMap: stageMap };
   }, [p1Team, p2Team, currentArena, powerScale, stageSelectionMode, excludedStagesStr]);
 
+  React.useEffect(() => {
+    if (stageSelectionMode === 'unique') {
+      uniqueStageMapRef.current.clear();
+    }
+  }, [stageSelectionMode]);
+
   // -- Effects --
 
   // Update Stats when Champion is declared
@@ -611,102 +630,105 @@ function SoloFightContent() {
     }
   }, [tournament?.champion, statsUpdated, tournament?.history])
 
-  // Initial Data Load
   useEffect(() => {
-    const fetchPromises: Promise<any>[] = [
-      fetch('/api/characters').then(res => res.json()),
-      fetch('/api/arenas').then(res => res.json())
-    ]
+    let cancelled = false
 
-    if (challengeId) {
-      fetchPromises.push(fetch(`/api/challenges?id=${challengeId}`).then(res => res.json()))
-    }
+    const run = async () => {
+      setLoading(true)
+      setLoadingStep(0)
 
-    Promise.all(fetchPromises).then((results) => {
-      const charsData = results[0]
-      const arenasData = results[1]
-      const challengeData = challengeId ? results[2] : null
-      
-      setCharacters(charsData)
-      setArenas(arenasData)
-      if (challengeData) setChallenge(challengeData)
-      setLoading(false)
-      
-      // Filter Characters
-      let validChars: Character[] = charsData
-      const selectedGroupsIds = selectedGroupsIdsStr?.split(',') || []
-      const excludedIds = searchParams.get('excluded')?.split(',') || []
-      const excludedStages = excludedStagesStr?.split(',') || []
+      const fetchPromises: Promise<any>[] = [
+        fetch('/api/characters').then(res => res.json()),
+        fetch('/api/arenas').then(res => res.json())
+      ]
 
-      if (groupMode === 'select' && selectedGroupsIds.length > 0) {
-        validChars = validChars.filter(c => selectedGroupsIds.includes(c.groupId))
-      }
-      
-      if (excludedIds.length > 0) {
-        validChars = validChars.filter(c => !excludedIds.includes(c.id))
+      if (challengeId) {
+        fetchPromises.push(fetch(`/api/challenges?id=${challengeId}`).then(res => res.json()))
       }
 
-      // Filter Arenas
-      let validArenas: Arena[] = arenasData
-      const selectedArenasIds = selectedArenasIdsStr?.split(',') || []
-      if (arenaMode === 'select' && selectedArenasIds.length > 0) {
-        validArenas = validArenas.filter(a => selectedArenasIds.includes(a.id))
-      } else if (arenaMode === 'null') {
-        validArenas = []
-      }
-
-      // Init Bracket
       try {
-        let bracket: BattleSession
-        
-        if (challengeData) {
-           // CHALLENGE MODE
-           bracket = generateChallengeTournament(challengeData, validChars)
-           
-           // Set fixed arena if defined
-           if (challengeData.config.fixedArenaId) {
-             const fixedArena = arenasData.find((a: Arena) => a.id === challengeData.config.fixedArenaId)
-             if (fixedArena) setCurrentArena(fixedArena)
-           } else if (challengeData.config.arenaPool && challengeData.config.arenaPool.length > 0) {
-              const pool = arenasData.filter((a: Arena) => challengeData.config.arenaPool?.includes(a.id))
-              const randomArena = pool[Math.floor(Math.random() * pool.length)]
-              setCurrentArena(randomArena)
-           } else if (validArenas.length > 0) {
-              const randomArena = validArenas[Math.floor(Math.random() * validArenas.length)]
-              setCurrentArena(randomArena)
-           }
+        const results = await Promise.all(fetchPromises)
+        if (cancelled) return
 
-        } else if (tournamentType === 'last-standing') {
-           bracket = generateLastOneStanding(validChars, teamSize, limit && limit !== 'all' ? Number(limit) : 0, stageSelectionMode, excludedStages) as BattleSession
-        } else {
-           const sizePerTeam = teamSize === '4v4' ? 4 : teamSize === '3v3' ? 3 : teamSize === '2v2' ? 2 : 1
-           let availableTeams = Math.floor(validChars.length / sizePerTeam)
-           
-           if (availableTeams < 2) {
-              const fallbackPool = charsData && charsData.length > 0 ? charsData : validChars
-              const neededChars = sizePerTeam * 2
-              while (validChars.length < neededChars && fallbackPool.length > 0) {
-                 validChars.push(fallbackPool[Math.floor(Math.random() * fallbackPool.length)])
-              }
-              availableTeams = Math.floor(validChars.length / sizePerTeam)
-           }
-           
-           let computedBracketSize = 2
-           if (availableTeams >= 2) {
-              computedBracketSize = Math.pow(2, Math.floor(Math.log2(availableTeams)))
-              if (computedBracketSize < 2) computedBracketSize = 2
-           }
-           
-           if (limit && limit !== 'all') {
-              const requested = Number(limit)
-              const capped = Math.max(2, Math.min(requested, computedBracketSize))
-              bracket = generateBracket(validChars, teamSize, capped, stageSelectionMode)
-           } else {
-              bracket = generateBracket(validChars, teamSize, computedBracketSize, stageSelectionMode)
-           }
+        const charsData = results[0]
+        const arenasData = results[1]
+        const challengeData = challengeId ? results[2] : null
+
+        setCharacters(charsData)
+        setArenas(arenasData)
+        if (challengeData) setChallenge(challengeData)
+        setLoadingStep(1)
+
+        let validChars: Character[] = charsData
+        const selectedGroupsIds = selectedGroupsIdsStr?.split(',') || []
+        const excludedIds = searchParams.get('excluded')?.split(',') || []
+        const excludedStages = excludedStagesStr?.split(',') || []
+
+        if (groupMode === 'select' && selectedGroupsIds.length > 0) {
+          validChars = validChars.filter(c => selectedGroupsIds.includes(c.groupId))
         }
-        
-        // Fallback: ensure teams have at least 1 fighter
+
+        if (excludedIds.length > 0) {
+          validChars = validChars.filter(c => !excludedIds.includes(c.id))
+        }
+
+        let validArenas: Arena[] = arenasData
+        const selectedArenasIds = selectedArenasIdsStr?.split(',') || []
+        if (arenaMode === 'select' && selectedArenasIds.length > 0) {
+          validArenas = validArenas.filter(a => selectedArenasIds.includes(a.id))
+        } else if (arenaMode === 'null') {
+          validArenas = []
+        }
+
+        setLoadingStep(2)
+
+        let bracket: BattleSession
+
+        if (challengeData) {
+          bracket = generateChallengeTournament(challengeData, validChars)
+
+          if (challengeData.config.fixedArenaId) {
+            const fixedArena = arenasData.find((a: Arena) => a.id === challengeData.config.fixedArenaId)
+            if (fixedArena) setCurrentArena(fixedArena)
+          } else if (challengeData.config.arenaPool && challengeData.config.arenaPool.length > 0) {
+            const pool = arenasData.filter((a: Arena) => challengeData.config.arenaPool?.includes(a.id))
+            const randomArena = pool[Math.floor(Math.random() * pool.length)]
+            setCurrentArena(randomArena)
+          } else if (validArenas.length > 0) {
+            const randomArena = validArenas[Math.floor(Math.random() * validArenas.length)]
+            setCurrentArena(randomArena)
+          }
+          setLoadingStep(3)
+        } else if (tournamentType === 'last-standing') {
+          bracket = generateLastOneStanding(validChars, teamSize, limit && limit !== 'all' ? Number(limit) : 0, stageSelectionMode, excludedStages) as BattleSession
+        } else {
+          const sizePerTeam = teamSize === '4v4' ? 4 : teamSize === '3v3' ? 3 : teamSize === '2v2' ? 2 : 1
+          let availableTeams = Math.floor(validChars.length / sizePerTeam)
+
+          if (availableTeams < 2) {
+            const fallbackPool = charsData && charsData.length > 0 ? charsData : validChars
+            const neededChars = sizePerTeam * 2
+            while (validChars.length < neededChars && fallbackPool.length > 0) {
+              validChars.push(fallbackPool[Math.floor(Math.random() * fallbackPool.length)])
+            }
+            availableTeams = Math.floor(validChars.length / sizePerTeam)
+          }
+
+          let computedBracketSize = 2
+          if (availableTeams >= 2) {
+            computedBracketSize = Math.pow(2, Math.floor(Math.log2(availableTeams)))
+            if (computedBracketSize < 2) computedBracketSize = 2
+          }
+
+          if (limit && limit !== 'all') {
+            const requested = Number(limit)
+            const capped = Math.max(2, Math.min(requested, computedBracketSize))
+            bracket = generateBracket(validChars, teamSize, capped, stageSelectionMode)
+          } else {
+            bracket = generateBracket(validChars, teamSize, computedBracketSize, stageSelectionMode)
+          }
+        }
+
         try {
           const firstMatch = bracket.matches?.[bracket.currentMatchIndex || 0]
           if (firstMatch) {
@@ -729,20 +751,93 @@ function SoloFightContent() {
         } catch (e) {
           console.warn('Solo fallback: failed to ensure team members', e)
         }
-        
+
+        if (cancelled) return
+
         setTournament(bracket)
-        
-        // Pick random arena for first match (if not already set by challenge)
+
         if (!challengeData && validArenas.length > 0) {
           const randomArena = validArenas[Math.floor(Math.random() * validArenas.length)]
           setCurrentArena(randomArena)
         }
+
+        setLoadingStep(4)
+        setLoading(false)
       } catch (e) {
+        if (cancelled) return
         console.error("Failed to generate bracket:", e)
-        // Handle error (e.g. not enough chars)
+        setLoading(false)
       }
-    })
+    }
+
+    run()
+
+    return () => {
+      cancelled = true
+    }
   }, [teamSize, limit, groupMode, selectedGroupsIdsStr, arenaMode, selectedArenasIdsStr, enableThirdPlace, tournamentType, stageSelectionMode, excludedStagesStr, challengeId])
+
+  useEffect(() => {
+    if (!loading) {
+      setLoadingProgress(0)
+      return
+    }
+
+    const interval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= loadingTarget) return prev
+        const diff = loadingTarget - prev
+        const step = Math.max(1, Math.round(diff / 5))
+        const next = prev + step
+        return next > loadingTarget ? loadingTarget : next
+      })
+    }, 80)
+
+    return () => clearInterval(interval)
+  }, [loading, loadingTarget])
+
+  useEffect(() => {
+    if (!loading) {
+      setLoadingTarget(100)
+      return
+    }
+
+    const stepTargets = [10, 35, 60, 85, 99]
+    const idx = Math.min(loadingStep, stepTargets.length - 1)
+    setLoadingTarget(stepTargets[idx])
+  }, [loading, loadingStep])
+
+  useEffect(() => {
+    if (!loading) {
+      setLoadingStep(0)
+      return
+    }
+
+    setLoadingStep(0)
+
+    const t1 = setTimeout(() => {
+      setLoadingStep(prev => (prev < 1 ? 1 : prev))
+    }, 10000)
+
+    const t2 = setTimeout(() => {
+      setLoadingStep(prev => (prev < 2 ? 2 : prev))
+    }, 25000)
+
+    const t3 = setTimeout(() => {
+      setLoadingStep(prev => (prev < 3 ? 3 : prev))
+    }, 40000)
+
+    const t4 = setTimeout(() => {
+      setLoadingStep(prev => (prev < 4 ? 4 : prev))
+    }, 55000)
+
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+      clearTimeout(t3)
+      clearTimeout(t4)
+    }
+  }, [loading])
 
   // -- Handlers --
 
@@ -1204,9 +1299,48 @@ function SoloFightContent() {
   }
 
   if (loading) {
+    const steps = [
+      { title: 'Booting Mega Fight Protocol', subtitle: 'Calibrating power scales and safety limits' },
+      { title: 'Warming Up Fighters', subtitle: 'Pulling combatants from the multiverse roster' },
+      { title: 'Removing Dead Bodies From The Arenas', subtitle: 'Sanitizing environments for the next clash' },
+      { title: 'Rolling Random Arenas', subtitle: 'Aligning hazards, buffs and debuffs' },
+      { title: 'Finalizing Tournament Bracket', subtitle: 'Seeding teams and locking matchups' }
+    ]
+    const currentStep = steps[Math.min(loadingStep, steps.length - 1)]
+
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin text-orange-500"><RefreshCw size={48} /></div>
+      <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center px-6">
+        <div className="w-full max-w-md space-y-8">
+          <div className="flex flex-col items-center gap-6">
+            <div className="w-40 h-40 flex items-center justify-center">
+              <VsBadge compact />
+            </div>
+            <div className="text-xs font-mono uppercase tracking-[0.3em] text-zinc-500">
+              Initializing Battle
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="w-full h-3 rounded-full bg-zinc-900 border border-zinc-800 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-orange-500 via-yellow-400 to-red-500 transition-all duration-500"
+                style={{ width: `${Math.min(Math.max(loadingProgress, 8), 100)}%` }}
+              />
+            </div>
+            <div className="text-center space-y-1">
+              <div className="text-sm font-semibold text-orange-300">
+                {currentStep.title}
+              </div>
+              <div className="text-xs text-zinc-400">
+                {currentStep.subtitle}
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center text-[11px] text-zinc-500 font-mono tracking-[0.25em]">
+            Please Wait
+          </div>
+        </div>
       </div>
     )
   }

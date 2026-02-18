@@ -7,7 +7,7 @@ import CustomSelect from '@/components/ui/CustomSelect'
 import { motion } from 'framer-motion'
 import { Character, CharacterStats, Group, EnvironmentType, CombatClass, MovementType, SizeType, SourceType, CompositionType, Skill, GenderType } from '@/types'
 import * as LucideIcons from 'lucide-react'
-import { Plus, Trash2, Save, AlertCircle, FileJson, X, Copy, Loader2, Maximize2, Ruler, Weight, Info, Zap, Wind, Mountain, Swords, Shield, Activity, Brain, Flame, Droplets, ArrowLeft, Users, Mars, Venus, Ban, Trophy, Crosshair, ChevronDown, ChevronUp, Heart, Dumbbell, Eye, Clipboard, Check, RotateCcw, Sparkles, Sun, CircleDot } from 'lucide-react'
+import { Plus, Trash2, Save, AlertCircle, FileJson, X, Copy, Loader2, Maximize2, Ruler, Weight, Info, Zap, Wind, Mountain, Swords, Shield, Activity, Brain, Flame, Droplets, ArrowLeft, Users, Mars, Venus, Ban, Trophy, Crosshair, ChevronDown, ChevronUp, Heart, Dumbbell, Eye, Clipboard, Check, RotateCcw, Sparkles, Sun, CircleDot, Handshake, ArrowRight, ArrowLeftRight, Percent, Hash, Crown } from 'lucide-react'
 import { CANON_SCALE_OPTIONS, COMBAT_CLASSES_DATA, MOVEMENT_DATA, COMPOSITION_DATA, SOURCE_DATA, ELEMENT_DATA, SKILL_TAGS, SKILL_TAGS_DATA } from '@/constants'
 import { getStatTier, calculateRank, getRankColor, RankType } from '@/utils/statTiers'
 import { generateCharacterPrompt } from '@/utils/aiPrompt'
@@ -18,11 +18,12 @@ interface CharacterFormProps {
   characterId?: string
   userMode?: boolean
   userGroup?: string
+  initialGroupId?: string
   onSaveCustom?: (data: Partial<Character>) => Promise<void>
   onCancel?: () => void
 }
 
-const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCancel }: CharacterFormProps) => {
+const CharacterForm = ({ characterId, userMode, userGroup, initialGroupId, onSaveCustom, onCancel }: CharacterFormProps) => {
   const router = useRouter()
   const [groups, setGroups] = useState<Group[]>([])
   const [isLoadingGroups, setIsLoadingGroups] = useState(!userMode)
@@ -84,6 +85,25 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
   const [showLayoutModal, setShowLayoutModal] = useState(false)
   const [pendingImage, setPendingImage] = useState<string | null>(null)
   const [pendingThumb, setPendingThumb] = useState<string | null>(null)
+  const [missingVars, setMissingVars] = useState<Record<string, string[]>>({})
+  const [addVarOpen, setAddVarOpen] = useState(false)
+  const [addVarCategory, setAddVarCategory] = useState<string>('')
+  const [addVarValue, setAddVarValue] = useState<string>('')
+  const [addVarLabel, setAddVarLabel] = useState<string>('')
+  const [addVarDesc, setAddVarDesc] = useState<string>('')
+  const [addVarIcon, setAddVarIcon] = useState<string>('')
+  const [iconSearch, setIconSearch] = useState('')
+  const [addVarSaving, setAddVarSaving] = useState(false)
+  const [charRule, setCharRule] = useState({
+    relationType: 'versus' as 'versus' | 'synergy',
+    targetCategory: '',
+    targetVariable: '',
+    statAffected: '',
+    effectType: 'percentage' as 'percentage' | 'flat',
+    effectValue: 0,
+    description: ''
+  })
+  const [charRuleSaving, setCharRuleSaving] = useState(false)
 
   const processIcon = (iconName: any) => {
     if (!iconName) return CircleDot
@@ -111,6 +131,25 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
     if (value === 'Neutral') return 'Aether'
     return value
   }
+
+  const allIcons = React.useMemo(() => {
+    return Object.keys(LucideIcons)
+      .filter(key => isNaN(Number(key)) && key !== 'createLucideIcon' && key !== 'default' && /^[A-Z]/.test(key))
+      .sort()
+  }, [])
+
+  const filteredIcons = React.useMemo(() => {
+    if (!iconSearch) {
+      const curated = [
+        'Swords','Shield','Flame','Zap','Wind','Mountain','Droplets','Skull','Star','Sparkles',
+        'Heart','Brain','Dumbbell','Snowflake','Sun','Moon','Orbit','Radio','Anchor','Biohazard',
+        'Cpu','Atom','FlaskConical','TreePine','Tent','Landmark','CloudRain','CloudLightning','CloudFog',
+        'Volume2','Triangle','Target','Wrench','Radiation'
+      ]
+      return curated.filter(icon => allIcons.includes(icon))
+    }
+    return allIcons.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase())).slice(0, 100)
+  }, [allIcons, iconSearch])
 
   // Fetch Data
   useEffect(() => {
@@ -180,6 +219,143 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
       })
     }
   }, [characterId])
+
+  useEffect(() => {
+    if (!userMode && !characterId && initialGroupId) {
+      setFormData(prev => ({
+        ...prev,
+        groupId: prev.groupId || initialGroupId
+      }))
+    }
+  }, [userMode, characterId, initialGroupId])
+
+  const refreshSystemVars = async () => {
+    try {
+      const res = await fetch('/api/system-vars')
+      const data = await res.json()
+      if (!data) return
+      const hydrated: any = {}
+      Object.keys(data).forEach(key => {
+        if (Array.isArray(data[key])) {
+          hydrated[key] = data[key].map((item: any) => ({
+            ...item,
+            icon: processIcon(item.icon)
+          }))
+        } else {
+          hydrated[key] = data[key]
+        }
+      })
+      setSystemVars(hydrated)
+    } catch {}
+  }
+
+  const computeMissing = () => {
+    const toSet = (arr: any[]) => new Set(arr.map((x: any) => (typeof x === 'string' ? x : x.value)))
+    const vars = systemVars || {}
+    const setCombat = toSet(vars.combatClasses || COMBAT_CLASSES_DATA)
+    const setMove = toSet(vars.movements || MOVEMENT_DATA)
+    const setComp = toSet(vars.compositions || COMPOSITION_DATA)
+    const setSource = toSet(vars.sources || SOURCE_DATA)
+    const setElem = toSet(vars.elements || ELEMENT_DATA)
+    const setSkill = toSet(vars.skillTags || SKILL_TAGS_DATA)
+    const setRace = new Set((vars.races || []).map((r: any) => r.value))
+    const stage = formData.stages?.[currentStageIndex]
+    const miss: Record<string, string[]> = {}
+    const cc = (stage?.tags?.combatClass || []).filter((v: string) => !setCombat.has(v))
+    if (cc.length) miss.combatClasses = cc
+    const mv = (stage?.tags?.movement || []).filter((v: string) => !setMove.has(v))
+    if (mv.length) miss.movements = mv
+    const comp = stage?.tags?.composition
+    if (comp && !setComp.has(comp)) miss.compositions = [comp]
+    const src = (stage?.tags?.source || []).map(normalizeSource).filter((v: string) => !setSource.has(v))
+    if (src.length) miss.sources = src
+    const elem = (stage?.tags?.element || []).map(normalizeElement).filter((v: string) => !setElem.has(v))
+    if (elem.length) miss.elements = elem
+    const ms = (stage?.combat?.mainSkill?.tags || []).filter((v: string) => !setSkill.has(v))
+    if (ms.length) miss.skillTagsMain = ms
+    const ss = (stage?.combat?.secondarySkill?.tags || []).filter((v: string) => !setSkill.has(v))
+    if (ss.length) miss.skillTagsSecondary = ss
+    const raceVal = currentStageIndex === 0 ? formData.specs?.race : (stage as any)?.race
+    if (raceVal && !setRace.has(raceVal)) miss.races = [raceVal]
+    setMissingVars(miss)
+  }
+
+  useEffect(() => {
+    computeMissing()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [systemVars, formData, currentStageIndex])
+
+  const openAddVar = (category: string, value: string) => {
+    setAddVarCategory(category)
+    setAddVarValue(value)
+    setAddVarLabel(value)
+    setAddVarDesc('')
+    setAddVarIcon('')
+    setAddVarOpen(true)
+  }
+
+  const removeMissing = (category: string, value: string) => {
+    if (category === 'combatClasses' || category === 'movements' || category === 'sources' || category === 'elements') {
+      const field = category === 'combatClasses' ? 'combatClass' : category === 'movements' ? 'movement' : category === 'sources' ? 'source' : 'element'
+      const newStages = [...(formData.stages || [])]
+      const tagsObj: any = newStages[currentStageIndex].tags as any
+      const arr = tagsObj[field] || []
+      tagsObj[field] = arr.filter((v: string) => v !== value)
+      setFormData(prev => ({ ...prev, stages: newStages }))
+    } else if (category === 'compositions') {
+      const newStages = [...(formData.stages || [])]
+      newStages[currentStageIndex].tags.composition = 'Organic'
+      setFormData(prev => ({ ...prev, stages: newStages }))
+    } else if (category === 'skillTagsMain' || category === 'skillTagsSecondary') {
+      const newStages = [...(formData.stages || [])]
+      const key = category === 'skillTagsMain' ? 'mainSkill' : 'secondarySkill'
+      const arr = newStages[currentStageIndex].combat[key]?.tags || []
+      newStages[currentStageIndex].combat[key] = {
+        ...(newStages[currentStageIndex].combat[key] || { name: '', description: '', tags: [] }),
+        tags: arr.filter((v: string) => v !== value)
+      }
+      setFormData(prev => ({ ...prev, stages: newStages }))
+    } else if (category === 'races') {
+      if (currentStageIndex === 0) {
+        handleSpecChange('race', '')
+      } else {
+        handleStageFieldChange('race', '')
+      }
+    }
+    computeMissing()
+  }
+
+  const saveAddVariable = async () => {
+    if (!addVarCategory || !addVarValue) return
+    try {
+      setAddVarSaving(true)
+      const res = await fetch('/api/system-vars')
+      const raw = await res.json()
+      const arr = Array.isArray(raw[addVarCategory]) ? raw[addVarCategory] : []
+      const exists = arr.some((x: any) => (x.value || x.label) === addVarValue)
+      if (!exists) {
+        arr.push({
+          value: addVarValue,
+          label: addVarLabel || addVarValue,
+          description: addVarDesc || '',
+          icon: addVarIcon || ''
+        })
+        raw[addVarCategory] = arr
+        await fetch('/api/system-vars', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(raw)
+        })
+        await refreshSystemVars()
+        computeMissing()
+      }
+      setAddVarOpen(false)
+    } catch {
+      setAddVarOpen(false)
+    } finally {
+      setAddVarSaving(false)
+    }
+  }
 
   // --- Handlers ---
 
@@ -254,6 +430,56 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
         [field]: value
     }
     setFormData(prev => ({ ...prev, stages: newStages }))
+  }
+
+  const handleSaveCharacterRule = async () => {
+    if (!formData.name) return
+    if (!charRule.targetCategory || !charRule.targetVariable || !charRule.statAffected || !charRule.effectValue) return
+    try {
+      setCharRuleSaving(true)
+      const payload = {
+        name: `fighter_${charRule.relationType || 'versus'}_${formData.name}_${charRule.targetVariable}`,
+        trigger: {
+          type: 'Fighter',
+          value: formData.name
+        },
+        target: {
+          type: charRule.targetCategory,
+          value: charRule.targetVariable
+        },
+        effect: {
+          stat: charRule.statAffected,
+          type: charRule.effectType,
+          value: Number(charRule.effectValue)
+        },
+        description: charRule.description || '',
+        active: true,
+        version: 1
+      }
+      const res = await fetch('/api/modifier-rules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      if (!res.ok) {
+        console.error('Failed to save character rule', await res.json().catch(() => null))
+        alert('Failed to save character modifier rule. Check console for details.')
+        return
+      }
+      await res.json()
+      setCharRule(prev => ({
+        ...prev,
+        targetVariable: '',
+        statAffected: '',
+        effectValue: 0,
+        description: ''
+      }))
+    } catch (error) {
+      console.error('Error saving character modifier rule', error)
+      alert('Error saving character modifier rule. Check console for details.')
+    } finally {
+      setCharRuleSaving(false)
+    }
   }
 
   const handleImageCropped = async (croppedImage: string) => {
@@ -571,6 +797,39 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
     { key: 'atk_spd', label: 'ATK. SPD (Reflexes)', icon: Eye },
   ]
 
+  const RACE_OPTIONS = systemRaces.map((r: string) => ({
+    label: r,
+    value: r
+  }))
+
+  const MODIFIER_TARGET_CATEGORIES = [
+    { value: 'CombatClass', label: 'Combat Class', icon: Swords },
+    { value: 'Movement', label: 'Movement', icon: Wind },
+    { value: 'Composition', label: 'Composition', icon: CircleDot },
+    { value: 'Source', label: 'Source', icon: Flame },
+    { value: 'Element', label: 'Element', icon: Droplets },
+    { value: 'Race', label: 'Race', icon: Users }
+  ]
+
+  const getTargetVariableOptions = () => {
+    switch (charRule.targetCategory) {
+      case 'CombatClass':
+        return COMBAT_CLASSES
+      case 'Movement':
+        return MOVEMENT_TYPES
+      case 'Composition':
+        return COMPOSITION_TYPES
+      case 'Source':
+        return SOURCE_TYPES
+      case 'Element':
+        return ELEMENTS
+      case 'Race':
+        return RACE_OPTIONS
+      default:
+        return []
+    }
+  }
+
   const currentStage = formData.stages![currentStageIndex]
   
   return (
@@ -724,192 +983,252 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
             </h2>
             
             <div className="flex flex-col md:flex-row gap-6">
-                {/* Left: Image & Physical Attributes */}
-                <div className="w-full md:w-1/3 flex flex-col gap-4 relative z-10 overflow-visible">
-                   <div className="flex flex-col gap-2">
-                       <label className="block text-xs font-bold text-zinc-500 uppercase">Character Image</label>
-                       <div className="aspect-square w-full">
-                           <ImageCropper 
-                             key={currentStageIndex}
-                             onImageCropped={handleImageCropped} 
-                             initialImage={currentStage.image}
-                           />
-                       </div>
-                   </div>
-
-                   {/* Fields under Image */}
-                   <div className="space-y-4 p-4 bg-black/20 rounded-xl border border-zinc-800/50">
-                        {/* Gender */}
-                        <div>
-                           <label className="block text-xs font-bold text-zinc-500 uppercase mb-1 flex items-center gap-1"><Users size={12}/> Gender</label>
-                           <div className="w-full h-[50px] bg-[#1a1a1a] border border-[#333] rounded-xl p-1 flex items-center relative">
-                               {[
-                                  { value: 'Male', icon: Mars, color: 'text-blue-400' },
-                                  { value: 'Female', icon: Venus, color: 'text-pink-400' },
-                                  { value: 'Both', icon: Users, color: 'text-purple-400' },
-                                  { value: 'None', icon: Ban, color: 'text-zinc-500' }
-                               ].map((option) => {
-                                   const isSelected = (formData.specs?.gender || 'Male') === option.value;
-                                   const Icon = option.icon;
-                                   return (
-                                      <button
-                                         key={option.value}
-                                         type="button"
-                                         onClick={() => handleSpecChange('gender', option.value)}
-                                         className={`flex-1 h-full flex items-center justify-center relative z-10 rounded-lg transition-colors duration-200 ${isSelected ? option.color : 'text-zinc-600 hover:text-zinc-400'}`}
-                                         title={option.value}
-                                      >
-                                         {isSelected && (
-                                            <motion.div
-                                               layoutId="gender-selection"
-                                               className="absolute inset-0 bg-zinc-800 rounded-lg shadow-sm border border-zinc-700/50"
-                                               transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                            />
-                                         )}
-                                         <Icon size={18} className="relative z-20" strokeWidth={2.5} />
-                                      </button>
-                                   )
-                               })}
-                           </div>
-                        </div>
-
-                        {/* Composition */}
-                        <div>
-                             <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">Composition</label>
-                             <CustomSelect
-                                options={COMPOSITION_TYPES}
-                                value={currentStage.tags.composition}
-                                onChange={v => handleTagChange('composition', v)}
-                             />
-                        </div>
-
-
-                   </div>
+              {/* Left: Image & Physical Attributes */}
+              <div className="w-full md:w-1/3 flex flex-col gap-4 relative z-10 overflow-visible">
+                <div className="flex flex-col gap-2">
+                  <label className="block text-xs font-bold text-zinc-500 uppercase">Character Image</label>
+                  <div className="aspect-square w-full">
+                    <ImageCropper 
+                      key={currentStageIndex}
+                      onImageCropped={handleImageCropped} 
+                      initialImage={currentStage.image}
+                    />
+                  </div>
                 </div>
 
-                {/* Right: Fields */}
-                <div className="w-full md:w-2/3 flex flex-col gap-4 relative z-10 overflow-visible">
-                    {/* Basic Info */}
-                   <div className="flex gap-4">
-                      <div className="flex-[2]">
-                          <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
-                              {currentStageIndex === 0 ? 'Name' : 'Name (Override)'}
-                          </label>
-                          <input 
-                            value={currentStageIndex === 0 ? (formData.name || '') : (currentStage.name ?? '')}
-                            onChange={e => {
-                                if (currentStageIndex === 0) handleInputChange('name', e.target.value)
-                                else handleStageFieldChange('name', e.target.value)
-                            }}
-                            className={`w-full h-[50px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-white focus:border-blue-500 outline-none hover:border-gray-600 transition-colors relative z-20 !pointer-events-auto !select-text ${currentStageIndex > 0 && !currentStage.name ? 'border-dashed border-zinc-700' : ''}`}
-                            placeholder={currentStageIndex === 0 ? "Character Name" : (formData.name || "Inherit from Base")} 
-                            required={currentStageIndex === 0}
-                          />
+                {/* Fields under Image */}
+                <div className="space-y-4 p-4 bg-black/20 rounded-xl border border-zinc-800/50">
+                  {/* Gender */}
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-1 flex items-center gap-1"><Users size={12}/> Gender</label>
+                    <div className="w-full h-[50px] bg-[#1a1a1a] border border-[#333] rounded-xl p-1 flex items-center relative">
+                      {[
+                        { value: 'Male', icon: Mars, color: 'text-blue-400' },
+                        { value: 'Female', icon: Venus, color: 'text-pink-400' },
+                        { value: 'Both', icon: Users, color: 'text-purple-400' },
+                        { value: 'None', icon: Ban, color: 'text-zinc-500' }
+                      ].map((option) => {
+                        const isSelected = (formData.specs?.gender || 'Male') === option.value;
+                        const Icon = option.icon;
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => handleSpecChange('gender', option.value)}
+                            className={`flex-1 h-full flex items-center justify-center relative z-10 rounded-lg transition-colors duration-200 ${isSelected ? option.color : 'text-zinc-600 hover:text-zinc-400'}`}
+                            title={option.value}
+                          >
+                            {isSelected && (
+                              <motion.div
+                                layoutId="gender-selection"
+                                className="absolute inset-0 bg-zinc-800 rounded-lg shadow-sm border border-zinc-700/50"
+                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                              />
+                            )}
+                            <Icon size={18} className="relative z-20" strokeWidth={2.5} />
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Composition */}
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">Composition</label>
+                    <CustomSelect
+                      options={COMPOSITION_TYPES}
+                      value={currentStage.tags.composition}
+                      onChange={v => handleTagChange('composition', v)}
+                    />
+                    {!!missingVars.compositions?.length && (
+                      <div className="mt-2">
+                        <div className="text-[10px] text-red-300 font-bold uppercase tracking-wide">Unregistered value</div>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {missingVars.compositions.map((val) => (
+                            <div
+                              key={`comp-${val}`}
+                              className="flex items-center gap-1 bg-red-950/80 border border-red-500/70 rounded-full pl-3 pr-1 py-1"
+                            >
+                              <span className="text-[10px] text-red-100">{val}</span>
+                              <button
+                                type="button"
+                                onClick={() => openAddVar('compositions', val)}
+                                className="w-5 h-5 flex items-center justify-center rounded-full bg-emerald-600/80 hover:bg-emerald-500 text-[10px] text-white"
+                                title="Add to system variables"
+                              >
+                                <Plus size={10} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removeMissing('compositions', val)}
+                                className="w-5 h-5 flex items-center justify-center rounded-full bg-red-900/80 hover:bg-red-700 text-[10px] text-red-200"
+                                title="Remove from this fighter"
+                              >
+                                <X size={10} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex-[1]">
-                          <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">Form Name</label>
-                          <input 
-                            value={currentStage.stage || ''} onChange={e => handleStageFieldChange('stage', e.target.value)}
-                            className="w-full h-[50px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-white focus:border-blue-500 outline-none hover:border-gray-600 transition-colors relative z-20 !pointer-events-auto !select-text"
-                            placeholder="e.g. Base" required
-                          />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Fields */}
+              <div className="w-full md:w-2/3 flex flex-col gap-4 relative z-10 overflow-visible">
+                {/* Basic Info */}
+                <div className="flex gap-4">
+                  <div className="flex-[2]">
+                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
+                      {currentStageIndex === 0 ? 'Name' : 'Name (Override)'}
+                    </label>
+                    <input 
+                      value={currentStageIndex === 0 ? (formData.name || '') : (currentStage.name ?? '')}
+                      onChange={e => {
+                        if (currentStageIndex === 0) handleInputChange('name', e.target.value)
+                        else handleStageFieldChange('name', e.target.value)
+                      }}
+                      className={`w-full h-[50px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-white focus:border-blue-500 outline-none hover:border-gray-600 transition-colors relative z-20 !pointer-events-auto !select-text ${currentStageIndex > 0 && !currentStage.name ? 'border-dashed border-zinc-700' : ''}`}
+                      placeholder={currentStageIndex === 0 ? "Character Name" : (formData.name || "Inherit from Base")} 
+                      required={currentStageIndex === 0}
+                    />
+                  </div>
+                  <div className="flex-[1]">
+                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">Form Name</label>
+                    <input 
+                      value={currentStage.stage || ''} onChange={e => handleStageFieldChange('stage', e.target.value)}
+                      className="w-full h-[50px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-white focus:border-blue-500 outline-none hover:border-gray-600 transition-colors relative z-20 !pointer-events-auto !select-text"
+                      placeholder="e.g. Base" required
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
+                    {currentStageIndex === 0 ? 'Alias' : 'Alias (Override)'}
+                  </label>
+                  <input 
+                    value={currentStageIndex === 0 ? (formData.alias || '') : (currentStage.alias ?? '')}
+                    onChange={e => {
+                      if (currentStageIndex === 0) handleInputChange('alias', e.target.value)
+                      else handleStageFieldChange('alias', e.target.value)
+                    }}
+                    className={`w-full h-[50px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-white focus:border-blue-500 outline-none hover:border-gray-600 transition-colors relative z-20 !pointer-events-auto !select-text ${currentStageIndex > 0 && !currentStage.alias ? 'border-dashed border-zinc-700' : ''}`}
+                    placeholder={currentStageIndex === 0 ? "e.g. The Strongest" : (formData.alias || "Inherit from Base")}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">Group</label>
+                    {userMode ? (
+                      <div className="w-full h-[50px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-zinc-400 flex items-center cursor-not-allowed">
+                        {userGroup || 'Default Group'}
                       </div>
-                   </div>
-                   
-                   <div>
-                      <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
-                          {currentStageIndex === 0 ? 'Alias' : 'Alias (Override)'}
-                      </label>
-                      <input 
-                        value={currentStageIndex === 0 ? (formData.alias || '') : (currentStage.alias ?? '')}
-                        onChange={e => {
-                            if (currentStageIndex === 0) handleInputChange('alias', e.target.value)
-                            else handleStageFieldChange('alias', e.target.value)
-                        }}
-                        className={`w-full h-[50px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-white focus:border-blue-500 outline-none hover:border-gray-600 transition-colors relative z-20 !pointer-events-auto !select-text ${currentStageIndex > 0 && !currentStage.alias ? 'border-dashed border-zinc-700' : ''}`}
-                        placeholder={currentStageIndex === 0 ? "e.g. The Strongest" : (formData.alias || "Inherit from Base")}
+                    ) : (
+                      <CustomSelect
+                        options={groups.map(g => ({ label: g.name, value: g.id }))}
+                        value={formData.groupId || ''}
+                        onChange={v => handleInputChange('groupId', v)}
+                        placeholder="Select Group"
                       />
-                   </div>
-                   
-                   <div className="grid grid-cols-2 gap-4">
-                      <div>
-                         <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">Group</label>
-                         {userMode ? (
-                           <div className="w-full h-[50px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-zinc-400 flex items-center cursor-not-allowed">
-                             {userGroup || 'Default Group'}
-                           </div>
-                         ) : (
-                           <CustomSelect
-                             options={groups.map(g => ({ label: g.name, value: g.id }))}
-                             value={formData.groupId || ''}
-                             onChange={v => handleInputChange('groupId', v)}
-                             placeholder="Select Group"
-                           />
-                         )}
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
+                      {currentStageIndex === 0 ? 'Race' : 'Race (Override)'}
+                    </label>
+                    <CustomSelect
+                      options={systemRaces.length > 0 ? systemRaces : ['Alien', 'Android', 'Angel', 'Cyborg', 'Deity', 'Demon', 'Human', 'Mutant', 'Unknown']}
+                      value={currentStageIndex === 0 ? (formData.specs?.race || 'Human') : (currentStage.race ?? '')}
+                      onChange={v => {
+                        if (currentStageIndex === 0) handleSpecChange('race', v)
+                        else handleStageFieldChange('race', v)
+                      }}
+                      placeholder={currentStageIndex === 0 ? "Select Race" : (formData.specs?.race || "Inherit from Base")}
+                    />
+                    {!!missingVars.races?.length && (
+                      <div className="mt-2">
+                        <div className="text-[10px] text-red-300 font-bold uppercase tracking-wide">Unregistered value</div>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {missingVars.races.map((val) => (
+                            <div
+                              key={`race-${val}`}
+                              className="flex items-center gap-1 bg-red-950/80 border border-red-500/70 rounded-full pl-3 pr-1 py-1"
+                            >
+                              <span className="text-[10px] text-red-100">{val}</span>
+                              <button
+                                type="button"
+                                onClick={() => openAddVar('races', val)}
+                                className="w-5 h-5 flex items-center justify-center rounded-full bg-emerald-600/80 hover:bg-emerald-500 text-[10px] text-white"
+                                title="Add to system variables"
+                              >
+                                <Plus size={10} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removeMissing('races', val)}
+                                className="w-5 h-5 flex items-center justify-center rounded-full bg-red-900/80 hover:bg-red-700 text-[10px] text-red-200"
+                                title="Remove from this fighter"
+                              >
+                                <X size={10} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div>
-                         <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
-                             {currentStageIndex === 0 ? 'Race' : 'Race (Override)'}
-                         </label>
-                         <CustomSelect
-                            options={systemRaces.length > 0 ? systemRaces : ['Alien', 'Android', 'Angel', 'Cyborg', 'Deity', 'Demon', 'Human', 'Mutant', 'Unknown']}
-                            value={currentStageIndex === 0 ? (formData.specs?.race || 'Human') : (currentStage.race ?? '')}
-                            onChange={v => {
-                                if (currentStageIndex === 0) handleSpecChange('race', v)
-                                else handleStageFieldChange('race', v)
-                            }}
-                            placeholder={currentStageIndex === 0 ? "Select Race" : (formData.specs?.race || "Inherit from Base")}
-                         />
-                      </div>
-                   </div>
-
-                    {/* Specs */}
-                    <div className="grid grid-cols-3 gap-4">
-                       <div>
-                          <label className="block text-xs font-bold text-zinc-500 uppercase mb-1 flex items-center gap-1"><Ruler size={12}/> Height (cm)</label>
-                          <input 
-                            type="number"
-                            value={formData.specs?.height || ''} onChange={e => handleSpecChange('height', e.target.value)}
-                            className="w-full h-[50px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-white focus:border-blue-500 outline-none hover:border-gray-600 transition-colors relative z-20 !pointer-events-auto !select-text"
-                          />
-                       </div>
-                       <div>
-                          <label className="block text-xs font-bold text-zinc-500 uppercase mb-1 flex items-center gap-1"><Weight size={12}/> Weight (kg)</label>
-                          <input 
-                            type="number"
-                            value={formData.specs?.weight || ''} onChange={e => handleSpecChange('weight', e.target.value)}
-                            className="w-full h-[50px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-white focus:border-blue-500 outline-none hover:border-gray-600 transition-colors relative z-20 !pointer-events-auto !select-text"
-                          />
-                       </div>
-                       <div>
-                          <label className="block text-xs font-bold text-zinc-500 uppercase mb-1 flex items-center gap-1"><Maximize2 size={12}/> Size (Auto)</label>
-                          <div className="w-full h-[50px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-zinc-400 font-mono text-xs flex items-center justify-center truncate hover:border-gray-600 transition-colors">
-                             {currentStage.tags.size}
-                          </div>
-                       </div>
-                    </div>
-
-                    {/* Lore - Expanded height */}
-                    <div className="flex-1 flex flex-col">
-                       <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
-                           {currentStageIndex === 0 ? 'Lore' : 'Lore (Override)'}
-                       </label>
-                       <textarea 
-                          value={currentStageIndex === 0 ? (formData.description || '') : (currentStage.description ?? '')}
-                          onChange={e => {
-                              if (currentStageIndex === 0) handleInputChange('description', e.target.value)
-                              else handleStageFieldChange('description', e.target.value)
-                          }}
-                          className={`w-full flex-1 min-h-[100px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none resize-none text-sm hover:border-gray-600 transition-colors relative z-20 !pointer-events-auto !select-text ${currentStageIndex > 0 && !currentStage.description ? 'border-dashed border-zinc-700' : ''}`}
-                          placeholder={currentStageIndex === 0 ? "Character backstory..." : (formData.description || "Inherit from Base")}
-                       />
-                    </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Specs */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-1 flex items-center gap-1"><Ruler size={12}/> Height (cm)</label>
+                    <input 
+                      type="number"
+                      value={formData.specs?.height || ''} onChange={e => handleSpecChange('height', e.target.value)}
+                      className="w-full h-[50px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-white focus:border-blue-500 outline-none hover:border-gray-600 transition-colors relative z-20 !pointer-events-auto !select-text"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-1 flex items-center gap-1"><Weight size={12}/> Weight (kg)</label>
+                    <input 
+                      type="number"
+                      value={formData.specs?.weight || ''} onChange={e => handleSpecChange('weight', e.target.value)}
+                      className="w-full h-[50px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-white focus:border-blue-500 outline-none hover:border-gray-600 transition-colors relative z-20 !pointer-events-auto !select-text"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-1 flex items-center gap-1"><Maximize2 size={12}/> Size (Auto)</label>
+                    <div className="w-full h-[50px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-zinc-400 font-mono text-xs flex items-center justify-center truncate hover:border-gray-600 transition-colors">
+                      {currentStage.tags.size}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lore - Expanded height */}
+                <div className="flex-1 flex flex-col">
+                  <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
+                    {currentStageIndex === 0 ? 'Lore' : 'Lore (Override)'}
+                  </label>
+                  <textarea 
+                    value={currentStageIndex === 0 ? (formData.description || '') : (currentStage.description ?? '')}
+                    onChange={e => {
+                      if (currentStageIndex === 0) handleInputChange('description', e.target.value)
+                      else handleStageFieldChange('description', e.target.value)
+                    }}
+                    className={`w-full flex-1 min-h-[100px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none resize-none text-sm hover:border-gray-600 transition-colors relative z-20 !pointer-events-auto !select-text ${currentStageIndex > 0 && !currentStage.description ? 'border-dashed border-zinc-700' : ''}`}
+                    placeholder={currentStageIndex === 0 ? "Character backstory..." : (formData.description || "Inherit from Base")}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* === NEW AREA: 2 STACKED CONTAINERS (Span 1) === */}
+        {/* RIGHT COLUMN: RANK + RADAR (Span 1) */}
         <div className="xl:col-span-1 flex flex-col gap-6">
             <div className="bg-zinc-900/50 p-6 rounded-2xl border border-zinc-800 flex-1 min-h-[200px] flex flex-col">
               <h2 className="text-xl font-bold text-white flex items-center gap-2 border-b border-zinc-800 pb-2 mb-4">
@@ -1199,6 +1518,37 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
                       onChange={v => handleTagChange('combatClass', v)}
                       multi
                    />
+                   {!!missingVars.combatClasses?.length && (
+                     <div className="mt-2">
+                       <div className="text-[10px] text-red-300 font-bold uppercase tracking-wide">Unregistered values</div>
+                       <div className="flex flex-wrap gap-2 mt-1">
+                         {missingVars.combatClasses.map((val) => (
+                           <div
+                             key={`cc-${val}`}
+                             className="flex items-center gap-1 bg-red-950/80 border border-red-500/70 rounded-full pl-3 pr-1 py-1"
+                           >
+                             <span className="text-[10px] text-red-100">{val}</span>
+                             <button
+                               type="button"
+                               onClick={() => openAddVar('combatClasses', val)}
+                               className="w-5 h-5 flex items-center justify-center rounded-full bg-emerald-600/80 hover:bg-emerald-500 text-[10px] text-white"
+                               title="Add to system variables"
+                             >
+                               <Plus size={10} />
+                             </button>
+                             <button
+                               type="button"
+                               onClick={() => removeMissing('combatClasses', val)}
+                               className="w-5 h-5 flex items-center justify-center rounded-full bg-red-900/80 hover:bg-red-700 text-[10px] text-red-200"
+                               title="Remove from this fighter"
+                             >
+                               <X size={10} />
+                             </button>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   )}
                 </div>
 
                 {/* Movement */}
@@ -1210,6 +1560,37 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
                       onChange={v => handleTagChange('movement', v)}
                       multi
                    />
+                  {!!missingVars.movements?.length && (
+                    <div className="mt-2">
+                      <div className="text-[10px] text-red-300 font-bold uppercase tracking-wide">Unregistered values</div>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {missingVars.movements.map((val) => (
+                          <div
+                            key={`mv-${val}`}
+                            className="flex items-center gap-1 bg-red-950/80 border border-red-500/70 rounded-full pl-3 pr-1 py-1"
+                          >
+                            <span className="text-[10px] text-red-100">{val}</span>
+                            <button
+                              type="button"
+                              onClick={() => openAddVar('movements', val)}
+                              className="w-5 h-5 flex items-center justify-center rounded-full bg-emerald-600/80 hover:bg-emerald-500 text-[10px] text-white"
+                              title="Add to system variables"
+                            >
+                              <Plus size={10} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeMissing('movements', val)}
+                              className="w-5 h-5 flex items-center justify-center rounded-full bg-red-900/80 hover:bg-red-700 text-[10px] text-red-200"
+                              title="Remove from this fighter"
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
              </div>
 
@@ -1315,6 +1696,37 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
                                         multi
                                         placeholder="Tags..."
                                      />
+                     {(isMain ? missingVars.skillTagsMain : missingVars.skillTagsSecondary)?.length ? (
+                       <div className="mt-2">
+                         <div className="text-[10px] text-red-300 font-bold uppercase tracking-wide">Unregistered values</div>
+                         <div className="flex flex-wrap gap-2 mt-1">
+                           {((isMain ? missingVars.skillTagsMain : missingVars.skillTagsSecondary) || []).map((val) => (
+                             <div
+                               key={`${isMain ? 'ms' : 'ss'}-${val}`}
+                               className="flex items-center gap-1 bg-red-950/80 border border-red-500/70 rounded-full pl-3 pr-1 py-1"
+                             >
+                               <span className="text-[10px] text-red-100">{val}</span>
+                               <button
+                                 type="button"
+                                 onClick={() => openAddVar('skillTags', val)}
+                                 className="w-5 h-5 flex items-center justify-center rounded-full bg-emerald-600/80 hover:bg-emerald-500 text-[10px] text-white"
+                                 title="Add to system variables"
+                               >
+                                 <Plus size={10} />
+                               </button>
+                               <button
+                                 type="button"
+                                 onClick={() => removeMissing(isMain ? 'skillTagsMain' : 'skillTagsSecondary', val)}
+                                 className="w-5 h-5 flex items-center justify-center rounded-full bg-red-900/80 hover:bg-red-700 text-[10px] text-red-200"
+                                 title="Remove from this fighter"
+                               >
+                                 <X size={10} />
+                               </button>
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+                     ) : null}
                                   </div>
                                </div>
                             </div>
@@ -1339,6 +1751,37 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
                       onChange={v => handleTagChange('source', v)}
                       multi
                    />
+                  {!!missingVars.sources?.length && (
+                    <div className="mt-2">
+                      <div className="text-[10px] text-red-300 font-bold uppercase tracking-wide">Unregistered values</div>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {missingVars.sources.map((val) => (
+                          <div
+                            key={`src-${val}`}
+                            className="flex items-center gap-1 bg-red-950/80 border border-red-500/70 rounded-full pl-3 pr-1 py-1"
+                          >
+                            <span className="text-[10px] text-red-100">{val}</span>
+                            <button
+                              type="button"
+                              onClick={() => openAddVar('sources', val)}
+                              className="w-5 h-5 flex items-center justify-center rounded-full bg-emerald-600/80 hover:bg-emerald-500 text-[10px] text-white"
+                              title="Add to system variables"
+                            >
+                              <Plus size={10} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeMissing('sources', val)}
+                              className="w-5 h-5 flex items-center justify-center rounded-full bg-red-900/80 hover:bg-red-700 text-[10px] text-red-200"
+                              title="Remove from this fighter"
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div>
                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">Element</label>
@@ -1347,14 +1790,237 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
                       onChange={v => handleTagChange('element', v)}
                       multi
                    />
+                  {!!missingVars.elements?.length && (
+                    <div className="mt-2">
+                      <div className="text-[10px] text-red-300 font-bold uppercase tracking-wide">Unregistered values</div>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {missingVars.elements.map((val) => (
+                          <div
+                            key={`el-${val}`}
+                            className="flex items-center gap-1 bg-red-950/80 border border-red-500/70 rounded-full pl-3 pr-1 py-1"
+                          >
+                            <span className="text-[10px] text-red-100">{val}</span>
+                            <button
+                              type="button"
+                              onClick={() => openAddVar('elements', val)}
+                              className="w-5 h-5 flex items-center justify-center rounded-full bg-emerald-600/80 hover:bg-emerald-500 text-[10px] text-white"
+                              title="Add to system variables"
+                            >
+                              <Plus size={10} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeMissing('elements', val)}
+                              className="w-5 h-5 flex items-center justify-center rounded-full bg-red-900/80 hover:bg-red-700 text-[10px] text-red-200"
+                              title="Remove from this fighter"
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
              </div>
           </div>
           
 
         </div>
-
       </div>
+
+      {/* Character Modifiers */}
+      <div className="mt-10 bg-zinc-900/50 p-6 rounded-2xl border border-zinc-800 space-y-6">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Swords className="text-orange-400" />
+                Character Modifiers
+              </h2>
+              <p className="text-xs text-zinc-500 mt-1">
+                Optional rules that directly reference this fighter as the trigger source.
+              </p>
+            </div>
+            <div className="flex bg-zinc-950 p-1 rounded-xl border border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setCharRule(prev => ({ ...prev, relationType: 'versus' }))}
+                className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
+                  charRule.relationType === 'versus'
+                    ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                <Swords size={14} />
+                VERSUS
+              </button>
+              <button
+                type="button"
+                onClick={() => setCharRule(prev => ({ ...prev, relationType: 'synergy' }))}
+                className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
+                  charRule.relationType === 'synergy'
+                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                <Handshake size={14} />
+                SYNERGY
+              </button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <div className="flex flex-col xl:flex-row gap-4 items-stretch min-w-[840px]">
+              {/* Trigger card */}
+              <div className="flex-1 min-w-[280px] space-y-4 p-5 rounded-2xl border bg-orange-500/5 border-orange-500/20">
+                <h4 className="text-xs font-bold uppercase flex items-center gap-2 text-orange-400">
+                  <div className="w-2 h-2 rounded-full bg-orange-500" />
+                  Trigger (Source)
+                </h4>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Group</label>
+                      <div className="w-full flex items-center justify-between bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white text-xs">
+                        <span className="flex items-center gap-2 truncate">
+                          <Users size={14} />
+                          Fighter
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Variable</label>
+                      <div className="w-full flex items-center justify-between bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white text-xs">
+                        <span className="flex items-center gap-2 truncate text-zinc-300">
+                          {formData.name || 'This Fighter'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="flex flex-col items-center justify-center text-zinc-600 self-center">
+                {charRule.relationType === 'versus' ? <ArrowRight size={24} /> : <ArrowLeftRight size={24} />}
+              </div>
+
+              {/* Target card */}
+              <div className="flex-1 min-w-[280px] space-y-4 p-5 rounded-2xl border bg-blue-500/5 border-blue-500/20">
+                <h4 className="text-xs font-bold text-blue-400 uppercase flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  Target (Affected)
+                </h4>
+
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Category</label>
+                      <CustomSelect
+                        value={charRule.targetCategory}
+                        onChange={val => setCharRule(prev => ({ ...prev, targetCategory: val, targetVariable: '' }))}
+                        options={MODIFIER_TARGET_CATEGORIES}
+                        placeholder="Category"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Variable</label>
+                      <CustomSelect
+                        value={charRule.targetVariable}
+                        onChange={val => setCharRule(prev => ({ ...prev, targetVariable: val }))}
+                        disabled={!charRule.targetCategory}
+                        options={getTargetVariableOptions()}
+                        placeholder="Select Variable..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Effect card */}
+              <div className="flex-1 min-w-[280px] space-y-4 p-5 rounded-2xl border bg-green-500/5 border-green-500/20">
+                <h4 className="text-xs font-bold text-green-400 uppercase flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                  Effect Outcome
+                </h4>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Stat</label>
+                      <CustomSelect
+                        value={charRule.statAffected}
+                        onChange={val => setCharRule(prev => ({ ...prev, statAffected: val }))}
+                        options={[
+                          { label: 'Strength', value: 'STR', icon: Dumbbell },
+                          { label: 'Speed', value: 'SPD', icon: Zap },
+                          { label: 'Sp. Atk', value: 'SP. ATK', icon: Sparkles },
+                          { label: 'Health', value: 'HP', icon: Heart },
+                          { label: 'Overall', value: 'Overall', icon: Crown }
+                        ]}
+                        placeholder="Select..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Type</label>
+                      <CustomSelect
+                        value={charRule.effectType}
+                        onChange={val =>
+                          setCharRule(prev => ({ ...prev, effectType: val as 'percentage' | 'flat' }))
+                        }
+                        options={[
+                          { label: 'Mult (%)', value: 'percentage', icon: Percent },
+                          { label: 'Flat (+/-)', value: 'flat', icon: Hash }
+                        ]}
+                        placeholder="Type"
+                      />
+                    </div>
+                  </div>
+                  <div className="bg-zinc-900 p-2 rounded-lg border border-zinc-800">
+                    <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Value</label>
+                    <input
+                      type="number"
+                      step={charRule.effectType === 'percentage' ? 0.05 : 1}
+                      value={charRule.effectValue}
+                      onChange={e =>
+                        setCharRule(prev => ({ ...prev, effectValue: Number(e.target.value) || 0 }))
+                      }
+                      className="w-full bg-transparent text-white text-sm font-bold outline-none"
+                      placeholder={charRule.effectType === 'percentage' ? '1.1' : '10'}
+                    />
+                  </div>
+                  <textarea
+                    value={charRule.description}
+                    onChange={e => setCharRule(prev => ({ ...prev, description: e.target.value }))}
+                    className="w-full min-h-[60px] bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-zinc-300 focus:border-green-500 outline-none resize-none placeholder:text-zinc-600"
+                    placeholder="Flavor text..."
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-zinc-800 mt-2">
+            <button
+              type="button"
+              onClick={handleSaveCharacterRule}
+              disabled={
+                charRuleSaving ||
+                !formData.name ||
+                !charRule.targetVariable ||
+                !charRule.statAffected ||
+                !charRule.effectValue
+              }
+              className={`w-full py-3 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg ${
+                charRule.relationType === 'versus'
+                  ? 'bg-gradient-to-r from-orange-600 to-red-600 shadow-orange-900/20'
+                  : 'bg-gradient-to-r from-purple-600 to-blue-600 shadow-purple-900/20'
+              }`}
+            >
+              {charRuleSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+              {charRule.relationType === 'versus' ? 'Attach Versus Rule' : 'Attach Synergy Rule'}
+            </button>
+          </div>
+        </div>
       {/* Layout Selection Modal */}
       {showLayoutModal && pendingImage && (
         <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
@@ -1454,6 +2120,76 @@ const CharacterForm = ({ characterId, userMode, userGroup, onSaveCustom, onCance
                     Skip Selection (Keep Current)
                 </button>
             </div>
+        </div>
+      )}
+
+      {addVarOpen && (
+        <div className="fixed inset-0 z-[70] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+            <h3 className="text-xl font-bold text-white uppercase tracking-wider mb-4">Adicionar Variável</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Categoria</label>
+                <div className="w-full h-[40px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-zinc-400 flex items-center">{addVarCategory}</div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Valor</label>
+                <input value={addVarValue} onChange={e => setAddVarValue(e.target.value)} className="w-full h-[40px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-white focus:border-blue-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Label</label>
+                <input value={addVarLabel} onChange={e => setAddVarLabel(e.target.value)} className="w-full h-[40px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-white focus:border-blue-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Description</label>
+                <input value={addVarDesc} onChange={e => setAddVarDesc(e.target.value)} className="w-full h-[40px] bg-[#1a1a1a] border border-[#333] rounded-xl px-4 text-white focus:border-blue-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Icon</label>
+                <div className="relative mb-2">
+                  <input
+                    value={iconSearch}
+                    onChange={e => setIconSearch(e.target.value)}
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-2 text-sm text-white focus:border-blue-500 outline-none"
+                    placeholder="Search icon (e.g. sword, fire)..."
+                  />
+                </div>
+                <div className="grid grid-cols-6 gap-2 max-h-[220px] overflow-y-auto p-2 bg-zinc-900/50 rounded-lg border border-zinc-800/50">
+                  {filteredIcons.map(iconName => {
+                    const Icon = (LucideIcons as any)[iconName]
+                    const isSelected = addVarIcon === iconName
+                    return (
+                      <button
+                        key={iconName}
+                        type="button"
+                        onClick={() => setAddVarIcon(iconName)}
+                        className={`aspect-square flex flex-col items-center justify-center p-2 rounded-lg transition-all ${isSelected ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20 scale-105' : 'hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200'}`}
+                        title={iconName}
+                      >
+                        <Icon size={20} />
+                      </button>
+                    )
+                  })}
+                  {filteredIcons.length === 0 && (
+                    <div className="col-span-6 text-center py-4 text-xs text-zinc-500">
+                      No icons found
+                    </div>
+                  )}
+                </div>
+                {addVarIcon && (
+                  <div className="mt-2 flex items-center gap-2 text-xs text-orange-400">
+                    <span className="font-bold">Selected:</span> {addVarIcon}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-3 mt-6">
+              <button type="button" onClick={() => setAddVarOpen(false)} className="px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-sm font-bold text-zinc-300 hover:text-white">Cancel</button>
+              <button type="button" onClick={saveAddVariable} disabled={addVarSaving} className="px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-white text-sm font-bold">
+                {addVarSaving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
