@@ -58,6 +58,18 @@ function isStatsObject(stats: unknown): stats is Record<string, number> {
   return true;
 }
 
+function normalizeStats(stats: unknown): Record<string, number> {
+  const keys = ['hp', 'str', 'def', 'sta', 'sp_atk', 'int', 'spd', 'atk_spd'];
+  const src = (stats && typeof stats === 'object') ? (stats as Record<string, unknown>) : {};
+  const out: Record<string, number> = {};
+  for (const k of keys) {
+    const v = src[k];
+    const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : 0;
+    out[k] = Number.isFinite(n) ? n : 0;
+  }
+  return out;
+}
+
 function normalizeStage(stage: unknown): CatalogStage {
   const defaults: Record<string, number> = { hp: 0, str: 0, def: 0, sta: 0, sp_atk: 0, int: 0, spd: 0, atk_spd: 0 };
   if (stage && typeof stage === 'object') {
@@ -68,7 +80,7 @@ function normalizeStage(stage: unknown): CatalogStage {
       : typeof s.image === 'string'
       ? s.image
       : '';
-    const baseStats = isStatsObject(s.stats) ? (s.stats as Record<string, number>) : defaults;
+    const baseStats = normalizeStats(s.stats);
     return { stage: name, thumbnail: thumb, stats: baseStats, totalPwr: sumStats(baseStats) };
   }
   return { stage: 'Base', thumbnail: '', stats: defaults, totalPwr: 0 };

@@ -871,6 +871,8 @@ export default function FightSetupPage() {
                                                       preload="metadata"
                                                       muted
                                                       playsInline
+                                                      autoPlay
+                                                      loop
                                                   />
                                               ) : (
                                                   <div className="w-full h-full bg-zinc-900 flex items-center justify-center">
@@ -954,27 +956,41 @@ export default function FightSetupPage() {
                </div>
             </div>
 
-            {/* Power Scale Filter */}
+            {/* Rank Filter */}
             <div className="px-6 pb-4 shrink-0 flex items-center gap-2 overflow-x-auto no-scrollbar">
-               
-               {Object.entries(rankCounts).sort((a,b) => RANK_ORDER.indexOf(a[0] as RankType) - RANK_ORDER.indexOf(b[0] as RankType)).map(([rank, count]) => {
-                  const isSelected = selectedRanks.includes(rank);
-                  const color = getRankColor(rank as RankType);
+               {RANK_ORDER.map(rank => {
+                 const count = rankCounts[rank] || 0
+                 const isSelected = selectedRanks.includes(rank)
+                 const color = getRankColor(rank)
+                 const isDisabled = count === 0
 
-                  return (
-                     <button
-                        key={rank}
-                        onClick={() => toggleSelection(rank, selectedRanks, setSelectedRanks)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border transition-colors ${!isSelected ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-600' : ''}`}
-                        style={isSelected ? {
-                           backgroundColor: `${color}33`, // ~20% opacity
-                           borderColor: color,
-                           color: color
-                        } : undefined}
-                     >
-                        {rank} ({count})
-                     </button>
-                  )
+                 return (
+                   <button
+                     key={rank}
+                     onClick={() => {
+                       if (isDisabled) return
+                       toggleSelection(rank, selectedRanks, setSelectedRanks)
+                     }}
+                     className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border transition-colors ${
+                       isDisabled
+                         ? 'bg-zinc-900 border-zinc-800 text-zinc-700 cursor-not-allowed opacity-60'
+                         : !isSelected
+                           ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-600'
+                           : ''
+                     }`}
+                     style={
+                       !isDisabled && isSelected
+                         ? {
+                             backgroundColor: `${color}33`,
+                             borderColor: color,
+                             color
+                           }
+                         : undefined
+                     }
+                   >
+                     {rank} ({count})
+                   </button>
+                 )
                })}
             </div>
 
@@ -1228,128 +1244,149 @@ export default function FightSetupPage() {
                                 
                                 {isExpanded && (
                                    <div className="pl-14 pr-4 py-2 bg-black/20 space-y-1">
-                                      {groupChars.map(char => {
-                                         const isCharExcluded = excludedFighters.includes(char.id);
-                                         const isCharSelected = isSelected && !isCharExcluded;
-                                         
-                                         const isCharExpanded = expandedCharacters.includes(char.id);
-                                         
-                                         // Calculate if any stage is excluded manually (considering only VISIBLE stages)
-                                         const charStages = char.stages || [];
-                                         
-                                         // Filter indices based on Rank selection
-                                         const visibleStageIndices = charStages
+                                      {(() => {
+                                        const rankedGroupChars = groupChars
+                                          .map(char => {
+                                            const charStages = char.stages || [];
+                                            const visibleStages = selectedRanks.length > 0
+                                              ? charStages.filter(s => selectedRanks.includes(getStageRank(s)))
+                                              : charStages;
+                                            let groupingRank: RankType = 'C';
+                                            if (visibleStages.length > 0) {
+                                              const strongest = visibleStages.reduce((prev, curr) => {
+                                                const prevTotal = Object.values(prev.stats || {}).reduce((a: any, b: any) => (Number(a)||0) + (Number(b)||0), 0) as number;
+                                                const currTotal = Object.values(curr.stats || {}).reduce((a: any, b: any) => (Number(a)||0) + (Number(b)||0), 0) as number;
+                                                return currTotal > prevTotal ? curr : prev;
+                                              }, visibleStages[0]);
+                                              groupingRank = getStageRank(strongest);
+                                            } else {
+                                              groupingRank = getCharacterRank(char);
+                                            }
+                                            return { char, rank: groupingRank };
+                                          })
+                                          .sort((a, b) => RANK_ORDER.indexOf(a.rank) - RANK_ORDER.indexOf(b.rank));
+
+                                        let lastRank: RankType | null = null;
+                                        return rankedGroupChars.map(({ char, rank }) => {
+                                          const rankColor = getRankColor(rank);
+                                          const isCharExcluded = excludedFighters.includes(char.id);
+                                          const isCharSelected = isSelected && !isCharExcluded;
+                                          const isCharExpanded = expandedCharacters.includes(char.id);
+                                          const charStages = char.stages || [];
+                                          const visibleStageIndices = charStages
                                             .map((s, i) => ({ s, i }))
                                             .filter(({ s }) => selectedRanks.length === 0 || selectedRanks.includes(getStageRank(s)))
                                             .map(({ i }) => i);
+                                          const excludedVisibleCount = visibleStageIndices.filter(idx => excludedStages.includes(`${char.id}:${idx}`)).length;
+                                          const isFullyStagesSelected = excludedVisibleCount === 0;
+                                          const isPartiallyStagesSelected = excludedVisibleCount > 0 && excludedVisibleCount < visibleStageIndices.length;
 
-                                         const excludedVisibleCount = visibleStageIndices.filter(idx => excludedStages.includes(`${char.id}:${idx}`)).length;
-                                         
-                                         const isFullyStagesSelected = excludedVisibleCount === 0;
-                                         const isPartiallyStagesSelected = excludedVisibleCount > 0 && excludedVisibleCount < visibleStageIndices.length;
-
-                                         return (
+                                          return (
                                             <div key={char.id} className="flex flex-col">
-                                               <div className="flex items-center justify-between py-1 group/char">
-                                                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                                                     {charStages.length > 1 && (
-                                                        <button 
-                                                           onClick={(e) => {
-                                                              e.stopPropagation();
-                                                              if (isCharExpanded) setExpandedCharacters(expandedCharacters.filter(id => id !== char.id));
-                                                              else setExpandedCharacters([...expandedCharacters, char.id]);
-                                                           }}
-                                                           className="p-1 text-zinc-600 hover:text-zinc-300"
-                                                        >
-                                                           <ChevronRight size={12} className={`transition-transform ${isCharExpanded ? 'rotate-90' : ''}`} />
-                                                        </button>
-                                                     )}
-                                                     <span className={`text-sm truncate ${isCharSelected ? 'text-zinc-300' : 'text-zinc-600'}`}>{char.name}</span>
-                                                  </div>
-                                                  
-                                                  <div 
-                                                     onClick={() => {
-                                                        if (isCharSelected) {
-                                                           // Deselect character (exclude it)
-                                                           setExcludedFighters([...excludedFighters, char.id]);
-                                                        } else {
-                                                           // Select character (remove exclusion)
-                                                           setExcludedFighters(excludedFighters.filter(id => id !== char.id));
-                                                           // Ensure group is selected if not already
-                                                           if (!selectedGroups.includes(group.id)) {
-                                                              setSelectedGroups([...selectedGroups, group.id]);
-                                                           }
-                                                        }
-                                                     }}
-                                                     className={`w-4 h-4 rounded border flex items-center justify-center cursor-pointer ${isCharSelected ? 'bg-orange-600 border-orange-600' : 'border-zinc-700 hover:border-zinc-500'}`}
+                                              {lastRank !== rank && (
+                                                <div className="flex items-center gap-2 py-2">
+                                                  <span
+                                                    className="text-[10px] font-bold px-2 py-0.5 rounded border"
+                                                    style={{
+                                                      color: rankColor,
+                                                      borderColor: `${rankColor}40`,
+                                                      backgroundColor: `${rankColor}10`
+                                                    }}
                                                   >
-                                                     {isCharSelected && isFullyStagesSelected && <CheckCircle2 size={12} className="text-white" />}
-                                                     {isCharSelected && isPartiallyStagesSelected && <Minus size={12} className="text-white" />}
-                                                  </div>
-                                               </div>
+                                                    {rank}
+                                                  </span>
+                                                  <span className="text-[10px] text-zinc-600">Rank</span>
+                                                </div>
+                                              )}
+                                              {(() => { lastRank = rank; return null })()}
+                                              <div className="flex items-center justify-between py-1 group/char">
+                                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                  {charStages.length > 1 && (
+                                                    <button
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (isCharExpanded) setExpandedCharacters(expandedCharacters.filter(id => id !== char.id));
+                                                        else setExpandedCharacters([...expandedCharacters, char.id]);
+                                                      }}
+                                                      className="p-1 text-zinc-600 hover:text-zinc-300"
+                                                    >
+                                                      <ChevronRight size={12} className={`transition-transform ${isCharExpanded ? 'rotate-90' : ''}`} />
+                                                    </button>
+                                                  )}
+                                                  <span className={`text-sm truncate ${isCharSelected ? 'text-zinc-300' : 'text-zinc-600'}`}>{char.name}</span>
+                                                </div>
 
-                                               {/* Stages List */}
-                                               {isCharExpanded && charStages.length > 1 && (
-                                                  <div className="pl-6 pr-2 py-1 space-y-1 border-l border-zinc-800 ml-2">
-                                                     {charStages.map((stage, idx) => {
-                                                        const stageId = `${char.id}:${idx}`;
-                                                        const isStageExcluded = excludedStages.includes(stageId);
-                                                        const isStageSelected = isCharSelected && !isStageExcluded;
-                                                        const rank = getStageRank(stage);
-                                                        
-                                                        // Hide stage if it doesn't match the rank filter
-                                                        if (selectedRanks.length > 0 && !selectedRanks.includes(rank)) return null;
+                                                <div
+                                                  onClick={() => {
+                                                    if (isCharSelected) {
+                                                      setExcludedFighters([...excludedFighters, char.id]);
+                                                    } else {
+                                                      setExcludedFighters(excludedFighters.filter(id => id !== char.id));
+                                                      if (!selectedGroups.includes(group.id)) {
+                                                        setSelectedGroups([...selectedGroups, group.id]);
+                                                      }
+                                                    }
+                                                  }}
+                                                  className={`w-4 h-4 rounded border flex items-center justify-center cursor-pointer ${isCharSelected ? 'bg-orange-600 border-orange-600' : 'border-zinc-700 hover:border-zinc-500'}`}
+                                                >
+                                                  {isCharSelected && isFullyStagesSelected && <CheckCircle2 size={12} className="text-white" />}
+                                                  {isCharSelected && isPartiallyStagesSelected && <Minus size={12} className="text-white" />}
+                                                </div>
+                                              </div>
 
-                                                        const rankColor = getRankColor(rank);
-
-                                                        return (
-                                                           <div key={idx} className="flex items-center justify-between py-0.5">
-                                                              <div className="flex items-center gap-2">
-                                                                 <span 
-                                                                    className="text-[10px] font-bold px-1.5 py-0.5 rounded border"
-                                                                    style={{ 
-                                                                       color: rankColor, 
-                                                                       borderColor: `${rankColor}40`,
-                                                                       backgroundColor: `${rankColor}10`
-                                                                    }}
-                                                                 >
-                                                                    {rank}
-                                                                 </span>
-                                                                 <span className={`text-xs ${isStageSelected ? 'text-zinc-400' : 'text-zinc-700'}`}>
-                                                                    {stage.stage}
-                                                                 </span>
-                                                              </div>
-                                                              
-                                                              <div 
-                                                                 onClick={() => {
-                                                                    if (isStageSelected) {
-                                                                       // Exclude stage
-                                                                       setExcludedStages([...excludedStages, stageId]);
-                                                                    } else {
-                                                                       // Include stage
-                                                                       setExcludedStages(excludedStages.filter(id => id !== stageId));
-                                                                       // If character was excluded, include it now?
-                                                                       if (excludedFighters.includes(char.id)) {
-                                                                           setExcludedFighters(excludedFighters.filter(id => id !== char.id));
-                                                                           // Ensure group selected
-                                                                           if (!selectedGroups.includes(group.id)) {
-                                                                               setSelectedGroups([...selectedGroups, group.id]);
-                                                                           }
-                                                                       }
-                                                                    }
-                                                                 }}
-                                                                 className={`w-3 h-3 rounded border flex items-center justify-center cursor-pointer ${isStageSelected ? 'bg-zinc-700 border-zinc-600' : 'border-zinc-800 hover:border-zinc-600'}`}
-                                                              >
-                                                                 {isStageSelected && <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />}
-                                                              </div>
-                                                           </div>
-                                                        )
-                                                     })}
-                                                  </div>
-                                               )}
+                                              {isCharExpanded && charStages.length > 1 && (
+                                                <div className="pl-6 pr-2 py-1 space-y-1 border-l border-zinc-800 ml-2">
+                                                  {charStages.map((stage, idx) => {
+                                                    const stageId = `${char.id}:${idx}`;
+                                                    const isStageExcluded = excludedStages.includes(stageId);
+                                                    const isStageSelected = isCharSelected && !isStageExcluded;
+                                                    const stageRank = getStageRank(stage);
+                                                    if (selectedRanks.length > 0 && !selectedRanks.includes(stageRank)) return null;
+                                                    const stageRankColor = getRankColor(stageRank);
+                                                    return (
+                                                      <div key={idx} className="flex items-center justify-between py-0.5">
+                                                        <div className="flex items-center gap-2">
+                                                          <span
+                                                            className="text-[10px] font-bold px-1.5 py-0.5 rounded border"
+                                                            style={{
+                                                              color: stageRankColor,
+                                                              borderColor: `${stageRankColor}40`,
+                                                              backgroundColor: `${stageRankColor}10`
+                                                            }}
+                                                          >
+                                                            {stageRank}
+                                                          </span>
+                                                          <span className={`text-xs ${isStageSelected ? 'text-zinc-400' : 'text-zinc-700'}`}>
+                                                            {stage.stage}
+                                                          </span>
+                                                        </div>
+                                                        <div
+                                                          onClick={() => {
+                                                            if (isStageSelected) {
+                                                              setExcludedStages([...excludedStages, stageId]);
+                                                            } else {
+                                                              setExcludedStages(excludedStages.filter(id => id !== stageId));
+                                                              if (excludedFighters.includes(char.id)) {
+                                                                setExcludedFighters(excludedFighters.filter(id => id !== char.id));
+                                                                if (!selectedGroups.includes(group.id)) {
+                                                                  setSelectedGroups([...selectedGroups, group.id]);
+                                                                }
+                                                              }
+                                                            }
+                                                          }}
+                                                          className={`w-3 h-3 rounded border flex items-center justify-center cursor-pointer ${isStageSelected ? 'bg-zinc-700 border-zinc-600' : 'border-zinc-800 hover:border-zinc-600'}`}
+                                                        >
+                                                          {isStageSelected && <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />}
+                                                        </div>
+                                                      </div>
+                                                    )
+                                                  })}
+                                                </div>
+                                              )}
                                             </div>
-                                         )
-                                      })}
+                                          )
+                                        })
+                                      })()}
                                    </div>
                                 )}
                              </div>

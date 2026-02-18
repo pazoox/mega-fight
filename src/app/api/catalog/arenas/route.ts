@@ -33,7 +33,8 @@ export async function GET(request: Request) {
     id: a.id,
     folder: a.folder || 'Uncategorized',
     name: a.name,
-    image: a.image || a.video || '',
+    image: a.image || '',
+    video: a.video || '',
     environment: Array.isArray(a.environment) ? a.environment : [],
     isActive: true
   }));
